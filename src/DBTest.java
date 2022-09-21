@@ -80,3 +80,9 @@ public class DBTest {
         }
     }
 }
+
+/*  In order to run:
+*       javac DBTest.java
+*       java -classpath ".;sqlite-jdbc-3.39.3.0.jar" DBTest
+*
+* */
