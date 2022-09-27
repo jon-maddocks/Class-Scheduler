@@ -1,11 +1,11 @@
 import java.util.HashMap;
 
-public class Monday {
+public class Tuesday {
     private HashMap<String, String> hm_ClassA;
     private HashMap<String, String> hm_ClassB;
     private HashMap<String, String> hm_ClassC;
 
-    public Monday(HashMap<String, String> hm_ClassA, HashMap<String, String> hm_ClassB, HashMap<String, String> hm_ClassC) {
+    public Tuesday(HashMap<String, String> hm_ClassA, HashMap<String, String> hm_ClassB, HashMap<String, String> hm_ClassC) {
         this.hm_ClassA = hm_ClassA;
         this.hm_ClassB = hm_ClassB;
         this.hm_ClassC = hm_ClassC;
