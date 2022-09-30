@@ -1,14 +1,14 @@
 import java.util.HashMap;
 
 public class Day {
-    private HashMap<String, String> hm_ClassA;
-    private HashMap<String, String> hm_ClassB;
-    private HashMap<String, String> hm_ClassC;
+    protected HashMap<String, String> hm_ClassA;
+    protected HashMap<String, String> hm_ClassB;
+    protected HashMap<String, String> hm_ClassC;
 
-    public Day(HashMap<String, String> hm_ClassA, HashMap<String, String> hm_ClassB, HashMap<String, String> hm_ClassC) {
-        this.hm_ClassA = hm_ClassA;
-        this.hm_ClassB = hm_ClassB;
-        this.hm_ClassC = hm_ClassC;
+    public Day() {
+        this.hm_ClassA = new HashMap<>();
+        this.hm_ClassB = new HashMap<>();
+        this.hm_ClassC = new HashMap<>();
     }
 
     public HashMap<String, String> getHm_ClassA() {
@@ -16,7 +16,7 @@ public class Day {
     }
 
     public void setHm_ClassA(HashMap<String, String> hm_ClassA) {
-        this.hm_ClassA = hm_ClassA;
+        this.hm_ClassA = new HashMap<>(hm_ClassA);
     }
 
     public HashMap<String, String> getHm_ClassB() {
@@ -24,7 +24,7 @@ public class Day {
     }
 
     public void setHm_ClassB(HashMap<String, String> hm_ClassB) {
-        this.hm_ClassB = hm_ClassB;
+        this.hm_ClassB = new HashMap<>(hm_ClassB);
     }
 
     public HashMap<String, String> getHm_ClassC() {
@@ -32,6 +32,6 @@ public class Day {
     }
 
     public void setHm_ClassC(HashMap<String, String> hm_ClassC) {
-        this.hm_ClassC = hm_ClassC;
+        this.hm_ClassC = new HashMap<>(hm_ClassC);
     }
 }

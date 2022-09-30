@@ -11,13 +11,13 @@ public class Scheduler {
     final static String CLASSES_FILE = "src/JITClasses.txt";
     static ArrayList<String> arlList = new ArrayList<>();
 
-
+    static HashMap<String, String> hm_ClassA;
+    static HashMap<String, String> hm_ClassB;
+    static HashMap<String, String> hm_ClassC;
 
     public static void main(String[] args){
         readFile();
-        HashMap<String, String> hm_ClassA;
-        HashMap<String, String> hm_ClassB;
-        HashMap<String, String> hm_ClassC;
+
         /*
             1. decide which section the initial time is being checked against
             2. check class A, class B, class C of that section's time
@@ -55,12 +55,31 @@ public class Scheduler {
         hm_Times.put("02:00-03:00", "Available");
         hm_Times.put("03:00-04:00", "Available");
 
+
         hm_ClassA = new HashMap<>(hm_Times);
         hm_ClassB = new HashMap<>(hm_Times);
         hm_ClassC = new HashMap<>(hm_Times);
 
-        Monday clsMonday = new Monday(hm_ClassA, hm_ClassB, hm_ClassC);
-        Tuesday clsTuesday = new Tuesday(hm_ClassA, hm_ClassB, hm_ClassC);
+        Day clsMonday = new Day();
+        clsMonday.setHm_ClassA(hm_ClassA);
+        clsMonday.setHm_ClassB(hm_ClassB);
+        clsMonday.setHm_ClassC(hm_ClassC);
+        Day clsTuesday = new Day();
+        clsTuesday.setHm_ClassA(hm_ClassA);
+        clsTuesday.setHm_ClassB(hm_ClassB);
+        clsTuesday.setHm_ClassC(hm_ClassC);
+        Day clsWednesday = new Day();
+        clsWednesday.setHm_ClassA(hm_ClassA);
+        clsWednesday.setHm_ClassB(hm_ClassB);
+        clsWednesday.setHm_ClassC(hm_ClassC);
+        Day clsThursday = new Day();
+        clsThursday.setHm_ClassA(hm_ClassA);
+        clsThursday.setHm_ClassB(hm_ClassB);
+        clsThursday.setHm_ClassC(hm_ClassC);
+        Day clsFriday = new Day();
+        clsFriday.setHm_ClassA(hm_ClassA);
+        clsFriday.setHm_ClassB(hm_ClassB);
+        clsFriday.setHm_ClassC(hm_ClassC);
 
 
         LocalTime lt830 = LocalTime.parse("08:30");
@@ -106,9 +125,7 @@ public class Scheduler {
         } catch(Exception e){
             e.printStackTrace();
         }
-
-        hm_ClassA.put(requestTime, "-----------BLAH BLAH BLAH-------------");
-      //  clsMonday.setHm_ClassA(hm_ClassA);
+        clsMonday.getHm_ClassA().put("This is the time ", "to mag");
         System.out.println(clsMonday.getHm_ClassA());
         System.out.println(clsTuesday.getHm_ClassA());
     }
