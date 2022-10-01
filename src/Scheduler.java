@@ -95,29 +95,6 @@ public class Scheduler {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
-    /*    try{
-            LocalTime requestStart= LocalTime.parse("12:30");
-            LocalTime startTime = LocalTime.parse("12:00");
-
-            String strEndTime = parseLeadZero("1:30");
-            SimpleDateFormat displayFormat = new SimpleDateFormat("HH:mm");
-            SimpleDateFormat parseFormat = new SimpleDateFormat("hh:mm a");
-            String temp = "0" + arrTime[index] + " PM";
-            Date date = parseFormat.parse(temp);
-            arrTime[index] = displayFormat.format(date);
-            LocalTime endTime = LocalTime.parse("01:30");
-
-            if(requestStart.isAfter(startTime) && requestStart.isBefore(endTime)){
-                System.out.println(requestStart + " is in between: " + startTime + "-" + endTime);
-            }
-        } catch(Exception e){
-            e.printStackTrace();
-        }
-
-     */
-
     }
 
     public static void readFile() {
@@ -245,58 +222,3 @@ public class Scheduler {
         return "";
     }
 }
-
-/*
-public static boolean class_A_Scheduler(Day clsDay, String requestTime, String requestClassTitle) throws ParseException {
-        boolean initialTimeFlag;
-        HashMap<String, String> hm_ConflictTimes = new HashMap<>();
-        final int TIME_START = 0;
-        final int TIME_END = 1;
-
-        if (clsDay.hm_ClassA.get(requestTime).equals("Available")) {
-            System.out.println(requestClassTitle + " time slot is empty: " + requestTime);
-            initialTimeFlag = true;
-        } else {
-            System.out.println(requestClassTitle + " CANNOT be inserted.");
-            System.out.println();
-            return false;
-        }
-
-        for (Map.Entry<String, String> s : clsDay.hm_ClassA.entrySet()
-        ) {
-            String[] arrsplit = s.getKey().split("-");
-            String[] arrRequest = requestTime.split("-");
-
-            LocalTime startTime = LocalTime.parse(parseMilitaryTime(arrsplit, TIME_START));
-            LocalTime endTime = LocalTime.parse(parseMilitaryTime(arrsplit, TIME_END));
-            LocalTime requestStartTime = LocalTime.parse(parseMilitaryTime(arrRequest, TIME_START));
-            LocalTime requestEndTime = LocalTime.parse(parseMilitaryTime(arrRequest, TIME_END));
-
-            //                                  10:00       12:00
-            //checking if 10:30 is in-between startTime and endTime
-            if ((requestStartTime.isAfter(startTime) && requestStartTime.isBefore(endTime)) ||
-                    (requestEndTime.isAfter(startTime) && requestEndTime.isBefore(endTime)) ||
-                    (startTime.isAfter(requestStartTime) && startTime.isBefore(requestEndTime)) ||
-                    (endTime.isAfter(requestStartTime) && endTime.isBefore(requestEndTime))
-            ) {
-                //The request time is in-between all the times within this block
-                //if ALL is available return true, else, return false
-                hm_ConflictTimes.put(startTime + "-" + endTime, s.getValue());
-                System.out.println(requestTime + " is in between: " + startTime +"-" + endTime);
-            } else {
-                System.out.println(requestTime + " is NOT in between: " + startTime +"-" + endTime);
-            }
-        }
-        //One issue, duplicate class titles with the same time, will be inserted
-        if (conflictTimes(hm_ConflictTimes)) {
-            System.out.println(requestClassTitle + " inserted into " + requestTime);
-            System.out.println();
-            clsDay.hm_ClassA.put(requestTime, requestClassTitle);
-            return true;
-        } else {
-            System.out.println(requestClassTitle + " CANNOT be inserted.");
-            System.out.println();
-            return false;
-        }
-    }
- */
