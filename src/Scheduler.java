@@ -6,29 +6,20 @@ import java.time.LocalTime;
 import java.util.*;
 
 public class Scheduler {
-
-
-    final static String CLASSES_FILE = "src/JITClasses.txt";
+    final static String CLASSES_FILE = "src/JITClasses_Small.txt";
     static ArrayList<String> arlList = new ArrayList<>();
 
     static HashMap<String, String> hm_ClassA;
     static HashMap<String, String> hm_ClassB;
     static HashMap<String, String> hm_ClassC;
+    static final int CLASS_ID = 0;
+    static final int CLASS_PROFESSOR = 1;
+    static final int CLASS_DAYS = 2;
+    static final int CLASS_START_TIME = 3;
+    static final int CLASS_END_TIME = 4;
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         readFile();
-
-        /*
-            1. decide which section the initial time is being checked against
-            2. check class A, class B, class C of that section's time
-            3. check the adjacent day of those same times for each class
-            4. return back to the initial day
-            5. check class A, class B, class C of the next section's time
-
-
-            The idea is to have an extensive HashMap of every valid time
-         */
-
         HashMap<String, String> hm_Times = new HashMap<>();
         hm_Times.put("08:30-10:30", "Available");
         hm_Times.put("10:30-12:30", "Available");
@@ -54,7 +45,6 @@ public class Scheduler {
         hm_Times.put("01:00-02:00", "Available");
         hm_Times.put("02:00-03:00", "Available");
         hm_Times.put("03:00-04:00", "Available");
-
 
         hm_ClassA = new HashMap<>(hm_Times);
         hm_ClassB = new HashMap<>(hm_Times);
@@ -82,75 +72,51 @@ public class Scheduler {
         clsFriday.setHm_ClassC(hm_ClassC);
 
 
-        LocalTime lt830 = LocalTime.parse("08:30");
-        LocalTime lt900 = LocalTime.parse("09:00");
-        LocalTime lt930 = LocalTime.parse("09:30");
-        LocalTime lt1000 = LocalTime.parse("10:00");
-        LocalTime lt1030 = LocalTime.parse("10:30");
+                /*
+                    0: CSC105
+                    1: James
+                    2: MW
+                    3: 8:30
+                    4: 10:30
+                 */
+        // For the days, maybe we could have a switch case statement determining for either MW, TR, M, T, etc...
+        try {
+            for (int i = 0; i < arlList.size(); i++) {
+                String tempTrim = trimCourseID(arlList.get(i));
+                String[] arrClassSplit = tempTrim.split("\t", 5);
+                String requestTime = parseLeadZero(arrClassSplit[CLASS_START_TIME]) +
+                        "-" + parseLeadZero(arrClassSplit[CLASS_END_TIME]);
+                String requestClassTitle = arrClassSplit[CLASS_ID];
+                System.out.println("Requesting: " + requestTime);
 
-        LocalTime lt230 = LocalTime.parse("14:30");
-        LocalTime lt430 = LocalTime.parse("16:30");
-
-
-        String requestTime = "08:30-10:30";
-        System.out.println("REQUESTING: 8:30-10:30");
-        try{
-            for (Map.Entry<String,String> s: hm_Times.entrySet()
-            ) {
-                String[] arrsplit = s.getKey().split("-");
-                String[] arrRequest = requestTime.split("-");
-
-                LocalTime startTime = LocalTime.parse(parseMilitaryTime(arrsplit, 0));
-                LocalTime endTime = LocalTime.parse(parseMilitaryTime(arrsplit, 1));
-                LocalTime requestStartTime = LocalTime.parse(parseMilitaryTime(arrRequest, 0));
-                LocalTime requestEndTime = LocalTime.parse(parseMilitaryTime(arrRequest, 1));
-
-                //check original time first. and for now we'll check sequential time
-                if(requestTime.equals(s.getKey())){
-                    //if available, change value to the class, else move on to sequential time
-                    System.out.println("found: " + s.getKey());
-                }
-                //                                  10:00       12:00
-                //checking if 10:30 is in-between startTime and endTime
-            if((requestStartTime.isAfter(startTime) && requestStartTime.isBefore(endTime)) ||
-                    (requestEndTime.isAfter(startTime) && requestEndTime.isBefore(endTime)) ||
-                    (startTime.isAfter(requestStartTime) && startTime.isBefore(requestEndTime)) ||
-                    (endTime.isAfter(requestStartTime) && endTime.isBefore(requestEndTime))
-            ){
-                //The request time is in-between all the times within this block
-
+                class_A_Scheduler(clsMonday, requestTime, requestClassTitle);
             }
-
-            }
-        } catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        clsMonday.getHm_ClassA().put("This is the time ", "to mag");
-        System.out.println(clsMonday.getHm_ClassA());
-        System.out.println(clsTuesday.getHm_ClassA());
     }
 
     public static void readFile() {
 
         try {
             BufferedReader bf = new BufferedReader(new FileReader(CLASSES_FILE));
-            while(true){
+            while (true) {
                 String line = bf.readLine();
-                if(line != null)
+                if (line != null)
                     arlList.add(line);
                 else
                     break;
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static String trimCourseID(String strLine){
+    public static String trimCourseID(String strLine) {
         StringBuilder strTrim = new StringBuilder();
 
-        for(int i = 0; i < strLine.length(); i++){
-            if(i != 3)
+        for (int i = 0; i < strLine.length(); i++) {
+            if (i != 3)
                 strTrim.append(strLine.charAt(i));
         }
 
@@ -161,14 +127,95 @@ public class Scheduler {
         SimpleDateFormat displayFormat = new SimpleDateFormat("HH:mm");
         SimpleDateFormat parseFormat = new SimpleDateFormat("hh:mm a");
 
-        if(arrTime[index].equals("02:30") || arrTime[index].equals("01:30") || arrTime[index].equals("01:00") ||
-                arrTime[index].equals("02:00") || arrTime[index].equals("03:30") || arrTime[index].equals("03:00") ||
-                arrTime[index].equals("04:00") || arrTime[index].equals("04:30")){
-            String temp = arrTime[index] + " PM";
+        if (arrTime[index].equals("2:30") || arrTime[index].equals("1:30") || arrTime[index].equals("1:00") ||
+                arrTime[index].equals("2:00") || arrTime[index].equals("3:30") || arrTime[index].equals("3:00") ||
+                arrTime[index].equals("4:00") || arrTime[index].equals("4:30")) {
+            String temp = "0" + arrTime[index] + " PM";
             Date date = parseFormat.parse(temp);
             arrTime[index] = displayFormat.format(date);
+        } else if (arrTime[index].equals("8:30") || arrTime[index].equals("9:00")) {
+            arrTime[index] = "0" + arrTime[index];
         }
 
         return arrTime[index];
+    }
+
+    public static String parseLeadZero(String strTime) {
+        String[] arrSplit = strTime.split(":");
+        String strResult = strTime;
+        if (arrSplit[0].length() == 1) {
+            strResult = "0" + strTime;
+        }
+
+        return strResult;
+    }
+
+    public static boolean class_A_Scheduler(Day clsDay, String requestTime, String requestClassTitle) throws ParseException {
+        boolean initialTimeFlag;
+        HashMap<String, String> hm_ConflictTimes = new HashMap<>();
+        final int TIME_START = 0;
+        final int TIME_END = 1;
+
+        if (clsDay.hm_ClassA.get(requestTime).equals("Available")) {
+            System.out.println(requestClassTitle + " time slot is empty: " + requestTime);
+            initialTimeFlag = true;
+        } else {
+            System.out.println(requestClassTitle + " CANNOT be inserted.");
+            System.out.println();
+            return false;
+        }
+
+        for (Map.Entry<String, String> s : clsDay.hm_ClassA.entrySet()
+        ) {
+            String[] arrsplit = s.getKey().split("-");
+            String[] arrRequest = requestTime.split("-");
+
+            LocalTime startTime = LocalTime.parse(parseMilitaryTime(arrsplit, TIME_START));
+            LocalTime endTime = LocalTime.parse(parseMilitaryTime(arrsplit, TIME_END));
+            LocalTime requestStartTime = LocalTime.parse(parseMilitaryTime(arrRequest, TIME_START));
+            LocalTime requestEndTime = LocalTime.parse(parseMilitaryTime(arrRequest, TIME_END));
+
+            //                                  10:00       12:00
+            //checking if 10:30 is in-between startTime and endTime
+            if ((requestStartTime.isAfter(startTime) && requestStartTime.isBefore(endTime)) ||
+                    (requestEndTime.isAfter(startTime) && requestEndTime.isBefore(endTime)) ||
+                    (startTime.isAfter(requestStartTime) && startTime.isBefore(requestEndTime)) ||
+                    (endTime.isAfter(requestStartTime) && endTime.isBefore(requestEndTime))
+            ) {
+                //The request time is in-between all the times within this block
+                //if ALL is available return true, else, return false
+                hm_ConflictTimes.put(startTime + "-" + endTime, s.getValue());
+                System.out.println(requestTime + " is in between: " + startTime +"-" + endTime);
+            }
+        }
+        //One issue, duplicate class titles with the same time, will be inserted
+        if (conflictTimes(hm_ConflictTimes)) {
+            System.out.println(requestClassTitle + " inserted into " + requestTime);
+            System.out.println();
+            clsDay.hm_ClassA.put(requestTime, requestClassTitle);
+            return true;
+        } else {
+            System.out.println(requestClassTitle + " CANNOT be inserted.");
+            System.out.println();
+            return false;
+        }
+    }
+
+    public static boolean conflictTimes(HashMap<String, String> hm_ConflictTimes) {
+        for (Map.Entry<String, String> s : hm_ConflictTimes.entrySet()
+        ) {
+            if (!s.getValue().equals("Available")) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static String findSectionNumber(HashMap<String, Integer> hm_Request, String strRequest){
+        if(hm_Request.containsKey(strRequest)){
+            int currentNum = hm_Request.get(strRequest);
+            hm_Request.put(strRequest, currentNum++);
+        }
+        return "";
     }
 }
