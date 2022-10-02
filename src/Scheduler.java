@@ -94,17 +94,17 @@ public class Scheduler {
         try {
             for (int i = 0; i < arlList.size(); i++) {
                 String tempTrim = trimCourseID(arlList.get(i));
-                String[] arrClassSplit = tempTrim.split("\t", 5);
+                String[] arrClassSplit = tempTrim.split("\\s+", 5);
                 String requestTime = parseLeadZero(arrClassSplit[CLASS_START_TIME]) +
                         "-" + parseLeadZero(arrClassSplit[CLASS_END_TIME]);
                 String requestClassTitle = arrClassSplit[CLASS_ID];
                 String requestDays = arrClassSplit[CLASS_DAYS];
 
-
                 boolean flag = false;
                 boolean trueFlag = false;
                 boolean boolGo_Back = false;
                 int index = arlCredit4.indexOf(requestTime);
+
                 while (!trueFlag) {
                     System.out.print("Requesting: " + requestTime + " for " + requestDays);
                     switch (requestDays) {
@@ -121,6 +121,7 @@ public class Scheduler {
                                         requestDays = "TR";
                                         index = 0;
                                         requestTime = arlCredit4.get(index);
+                                        clsTuesday.hm_4CreditHours.put(requestTime, true);
                                         break;
                                     }
                                     requestTime = arlCredit4.get(index);
@@ -141,7 +142,11 @@ public class Scheduler {
                                         index++;
                                     else {
                                         //entire Tuesday has been exhausted. Go to Friday
-                                        flag = true;
+                                        requestDays = "MW";
+                                        index = 0;
+                                        requestTime = arlCredit4.get(index);
+                                        clsMonday.hm_4CreditHours.put(requestTime, true);
+                                        break;
                                     }
                                     requestTime = arlCredit4.get(index);
                                 }
