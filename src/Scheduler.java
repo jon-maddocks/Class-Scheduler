@@ -22,6 +22,13 @@ public class Scheduler {
     static final int CLASS_START_TIME = 3;
     static final int CLASS_END_TIME = 4;
 
+    static Day clsMonday = new Day();
+    static Day clsTuesday = new Day();
+    static Day clsWednesday = new Day();
+    static Day clsThursday = new Day();
+    static Day clsFriday = new Day();
+
+
     public static void main(String[] args) {
         readFile();
         HashMap<String, String> hm_Times = new HashMap<>();
@@ -60,23 +67,23 @@ public class Scheduler {
         hm_ClassB = new HashMap<>(hm_Times);
         hm_ClassC = new HashMap<>(hm_Times);
 
-        Day clsMonday = new Day();
+    //    Day clsMonday = new Day();
         clsMonday.setHm_ClassA(hm_ClassA);
         clsMonday.setHm_ClassB(hm_ClassB);
         clsMonday.setHm_ClassC(hm_ClassC);
-        Day clsTuesday = new Day();
+   //     Day clsTuesday = new Day();
         clsTuesday.setHm_ClassA(hm_ClassA);
         clsTuesday.setHm_ClassB(hm_ClassB);
         clsTuesday.setHm_ClassC(hm_ClassC);
-        Day clsWednesday = new Day();
+    //    Day clsWednesday = new Day();
         clsWednesday.setHm_ClassA(hm_ClassA);
         clsWednesday.setHm_ClassB(hm_ClassB);
         clsWednesday.setHm_ClassC(hm_ClassC);
-        Day clsThursday = new Day();
+     //   Day clsThursday = new Day();
         clsThursday.setHm_ClassA(hm_ClassA);
         clsThursday.setHm_ClassB(hm_ClassB);
         clsThursday.setHm_ClassC(hm_ClassC);
-        Day clsFriday = new Day();
+     //   Day clsFriday = new Day();
         clsFriday.setHm_ClassA(hm_ClassA);
         clsFriday.setHm_ClassB(hm_ClassB);
         clsFriday.setHm_ClassC(hm_ClassC);
@@ -92,113 +99,278 @@ public class Scheduler {
         // For the days, maybe we could have a switch case statement determining for either MW, TR, M, T, etc...
         // ******** This try and catch block ONLY works if the initial day is MW
         try {
-            for (int i = 0; i < arlList.size(); i++) {
+            for(int i = 0; i < arlList.size(); i++){
                 String tempTrim = trimCourseID(arlList.get(i));
                 String[] arrClassSplit = tempTrim.split("\\s+", 5);
                 String requestTime = parseLeadZero(arrClassSplit[CLASS_START_TIME]) +
                         "-" + parseLeadZero(arrClassSplit[CLASS_END_TIME]);
                 String requestClassTitle = arrClassSplit[CLASS_ID];
                 String requestDays = arrClassSplit[CLASS_DAYS];
+                //like, if MW and it's a four credit course
 
-                boolean flag = false;
-                boolean trueFlag = false;
-                boolean boolGo_Back = false;
-                int index = arlCredit4.indexOf(requestTime);
-
-                while (!trueFlag) {
-                    System.out.print("Requesting: " + requestTime + " for " + requestDays);
-                    switch (requestDays) {
-                        case "MW":
-                            //do something for MW
-                            flag = requestMW(clsMonday, clsWednesday, requestTime, requestClassTitle);
-                            if (!flag && clsMonday.getHm_4CreditHours().get(arlCredit4.get(index))) {
-                                while (!flag) {
-                                    flag = requestMW(clsMonday, clsWednesday, requestTime, requestClassTitle);
-                                    if (index < arlCredit4.size() - 1)
-                                        index++;
-                                    else {
-                                        //entire Monday has been exhausted. Go back to TR
-                                        requestDays = "TR";
-                                        index = 0;
-                                        requestTime = arlCredit4.get(index);
-                                        clsTuesday.hm_4CreditHours.put(requestTime, true);
-                                        break;
-                                    }
-                                    requestTime = arlCredit4.get(index);
-                                }
-                                //   break;
-                            }
-                            if (!flag) {
-                                requestDays = "TR";
-                            }
-                            break;
-                        case "TR":
-                            //do something for TR
-                            flag = requestTR(clsTuesday, clsThursday, requestTime, requestClassTitle);
-                            if (!flag && clsTuesday.getHm_4CreditHours().get(arlCredit4.get(index--))) {
-                                while (!flag) {
-                                    flag = requestTR(clsTuesday, clsThursday, requestTime, requestClassTitle);
-                                    if (index < arlCredit4.size() - 1)
-                                        index++;
-                                    else {
-                                        //entire Tuesday has been exhausted. Go to Friday
-                                        requestDays = "MW";
-                                        index = 0;
-                                        requestTime = arlCredit4.get(index);
-                                        clsMonday.hm_4CreditHours.put(requestTime, true);
-                                        break;
-                                    }
-                                    requestTime = arlCredit4.get(index);
-                                }
-                                break;
-                            }
-                            if (!flag) {
-                                //we have to go back to monday
-                                clsTuesday.hm_4CreditHours.put(requestTime, true);
-                                requestDays = "MW";
-                                index++;
-                                requestTime = arlCredit4.get(index);
-                                clsMonday.hm_4CreditHours.put(requestTime, true);
-                            }
-                            break;
-                        case "M":
-                            //do something for M
-                            break;
-                        case "T":
-                            //do something for T
-                            break;
-                        case "W":
-                            //do something for W
-                            break;
-                        case "R":
-                            //do something for R
-                            break;
-                        case "F":
-                            //do something for F
-                            break;
-                    }
-
-                    if (flag) {
-                        System.out.println();
-                        trueFlag = true;
-                    }
-                }
+                if(arlCredit4.contains(requestTime)){
+                    if(requestDays.equals("MW"))
+                        algorithmMW(arlCredit4, requestTime, requestDays, requestClassTitle, arlCredit4.indexOf(requestTime));
+                    else if(requestDays.equals("TR"))
+                        algorithmTR(arlCredit4, requestTime, requestDays, requestClassTitle, arlCredit4.indexOf(requestTime));
+                } else if(arlCredit3.contains(requestTime)){
+                    if(requestDays.equals("MW"))
+                        algorithmMW(arlCredit3, requestTime, requestDays, requestClassTitle, arlCredit4.indexOf(requestTime));
+                    else if(requestDays.equals("TR"))
+                        algorithmTR(arlCredit3, requestTime, requestDays, requestClassTitle, arlCredit4.indexOf(requestTime));
+                } else if(arlCredit2.contains(requestTime)){
+                    if(requestDays.equals("MW"))
+                        algorithmMW(arlCredit2, requestTime, requestDays, requestClassTitle, arlCredit4.indexOf(requestTime));
+                    else if(requestDays.equals("TR"))
+                        algorithmTR(arlCredit2, requestTime, requestDays, requestClassTitle, arlCredit4.indexOf(requestTime));                }
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+        /*
+        System.out.println("--- Monday ---");
+        for (String s : arlCredit2) {
+            System.out.println("Class A: " + s + " - " + clsMonday.getHm_ClassA().get(s));
+            System.out.println("Class B: " + s + " - " + clsMonday.getHm_ClassB().get(s));
+            System.out.println("Class C: " + s + " - " + clsMonday.getHm_ClassC().get(s));
+        } */
 
+
+        System.out.println("*** Four Credits ***");
         System.out.println("--- Monday ---");
         for (String s : arlCredit4) {
-            System.out.println(s + " - " + clsMonday.getHm_ClassA().get(s));
-            System.out.println(s + " - " + clsMonday.getHm_ClassB().get(s));
-            System.out.println(s + " - " + clsMonday.getHm_ClassC().get(s));
+            System.out.println("Class A: " + s + " - " + clsMonday.getHm_ClassA().get(s));
+            System.out.println("Class B: " + s + " - " + clsMonday.getHm_ClassB().get(s));
+            System.out.println("Class C: " + s + " - " + clsMonday.getHm_ClassC().get(s));
         }
         System.out.println("--- Tuesday ---");
         for (String s : arlCredit4) {
-            System.out.println(s + " - " + clsTuesday.getHm_ClassA().get(s));
-            System.out.println(s + " - " + clsTuesday.getHm_ClassB().get(s));
-            System.out.println(s + " - " + clsTuesday.getHm_ClassC().get(s));
+            System.out.println("Class A: " + s + " - " + clsTuesday.getHm_ClassA().get(s));
+            System.out.println("Class B: " + s + " - " + clsTuesday.getHm_ClassB().get(s));
+            System.out.println("Class C: " + s + " - " + clsTuesday.getHm_ClassC().get(s));
+        }
+        System.out.println("--- Wednesday ---");
+        for (String s : arlCredit4) {
+            System.out.println("Class A: " + s + " - " + clsWednesday.getHm_ClassA().get(s));
+            System.out.println("Class B: " + s + " - " + clsWednesday.getHm_ClassB().get(s));
+            System.out.println("Class C: " + s + " - " + clsWednesday.getHm_ClassC().get(s));
+        }
+        System.out.println("--- Thursday ---");
+        for (String s : arlCredit4) {
+            System.out.println("Class A: " + s + " - " + clsThursday.getHm_ClassA().get(s));
+            System.out.println("Class B: " + s + " - " + clsThursday.getHm_ClassB().get(s));
+            System.out.println("Class C: " + s + " - " + clsThursday.getHm_ClassC().get(s));
+        }
+
+        System.out.println("\n*** Three Credits ***");
+        System.out.println("--- Monday ---");
+        for (String s : arlCredit3) {
+            System.out.println("Class A: " + s + " - " + clsMonday.getHm_ClassA().get(s));
+            System.out.println("Class B: " + s + " - " + clsMonday.getHm_ClassB().get(s));
+            System.out.println("Class C: " + s + " - " + clsMonday.getHm_ClassC().get(s));
+        }
+        System.out.println("--- Tuesday ---");
+        for (String s : arlCredit3) {
+            System.out.println("Class A: " + s + " - " + clsTuesday.getHm_ClassA().get(s));
+            System.out.println("Class B: " + s + " - " + clsTuesday.getHm_ClassB().get(s));
+            System.out.println("Class C: " + s + " - " + clsTuesday.getHm_ClassC().get(s));
+        }
+        System.out.println("--- Wednesday ---");
+        for (String s : arlCredit3) {
+            System.out.println("Class A: " + s + " - " + clsWednesday.getHm_ClassA().get(s));
+            System.out.println("Class B: " + s + " - " + clsWednesday.getHm_ClassB().get(s));
+            System.out.println("Class C: " + s + " - " + clsWednesday.getHm_ClassC().get(s));
+        }
+        System.out.println("--- Thursday ---");
+        for (String s : arlCredit3) {
+            System.out.println("Class A: " + s + " - " + clsThursday.getHm_ClassA().get(s));
+            System.out.println("Class B: " + s + " - " + clsThursday.getHm_ClassB().get(s));
+            System.out.println("Class C: " + s + " - " + clsThursday.getHm_ClassC().get(s));
+        }
+
+    }
+
+    public static void algorithmMW(ArrayList<String> arlCredit,
+                                   String requestTime, String requestDays,
+                                   String requestClassTitle, int ORGINAL_INDEX) throws ParseException {
+
+            int index = arlCredit.indexOf(requestTime);
+
+            boolean trueFlag = false;
+            boolean[] requiredStep = new boolean[20];
+            int currentStep = 0;
+            boolean fridayFlag = false;
+
+            while(!trueFlag){
+                System.out.println("\n---------Requesting: " + requestClassTitle + " on " + requestDays + " at " +
+                        requestTime + "---------");
+                //Step 2, 3
+                System.out.println(" * * * * Requesting for MW * * * *");
+                requiredStep[currentStep] = requestMW(clsMonday, clsWednesday, requestTime, requestClassTitle);
+                //Step 4, 5
+                if(!requiredStep[currentStep]){
+                    System.out.println(" * * * * Requesting for TR * * * *");
+                    currentStep++;
+                    System.out.println("STEP: " + currentStep);
+                    requiredStep[currentStep] = requestTR(clsTuesday, clsThursday, requestTime, requestClassTitle);
+                }
+                //Steps 6 -> 9
+                if(!requiredStep[currentStep]){
+                    boolean flag = false;
+                    System.out.println(" * * * * Requesting for MW * * * *");
+                    while(!flag){
+                        if(requiredStep[currentStep] || index == arlCredit.size()-1){
+                            index = 0;
+                            flag = true;
+                        } else {
+                            index++;
+                            currentStep++;
+                            requestTime = arlCredit.get(index);
+                            requiredStep[currentStep] = requestMW(clsMonday, clsWednesday, requestTime, requestClassTitle);
+                        }
+                    }
+                }
+                //Steps 10 -> 15
+                if(!requiredStep[currentStep]){
+                    boolean flag = false;
+                    index = 0;
+                    System.out.println(" * * * * Requesting for TR * * * *");
+                    while(!flag){
+                        if(requiredStep[currentStep] || index == arlCredit.size()){
+                            index = 0;
+                            flag = true;
+                        } else {
+                            requestTime = arlCredit.get(index);
+                            requiredStep[currentStep] = requestTR(clsTuesday, clsThursday, requestTime, requestClassTitle);
+                            if(!requiredStep[currentStep]){
+                                currentStep++;
+                                index++;
+                            }
+                        }
+                    }
+                }
+                //Steps 16, 17
+                if(!requiredStep[currentStep]){
+                    index = 0;
+                    boolean flag = false;
+                    System.out.println(" * * * * Requesting for MW * * * *");
+                    while(!flag){
+                        if(requiredStep[currentStep] || index == ORGINAL_INDEX){
+                            flag = true;
+                        } else {
+                            requestTime = arlCredit.get(index);
+                            requiredStep[currentStep] = requestMW(clsMonday, clsWednesday, requestTime, requestClassTitle);
+                            if(!requiredStep[currentStep]){
+                                currentStep++;
+                                index++;
+                            }
+                        }
+                    }
+                }
+
+
+                if(requiredStep[currentStep])
+                    trueFlag = true;
+                else if(!requiredStep[currentStep] && index == ORGINAL_INDEX){
+                    fridayFlag = true;
+                    trueFlag =true;
+                }
+            }
+            if(fridayFlag){
+                System.out.println("------> FRIDAY FRIDAY FRIDAY : " + requestClassTitle
+                        + " at " + requestTime + " <--------");
+            }
+    }
+
+    public static void algorithmTR(ArrayList<String> arlCredit,
+                                   String requestTime, String requestDays,
+                                   String requestClassTitle, int ORGINAL_INDEX) throws ParseException {
+
+        int index = arlCredit.indexOf(requestTime);
+
+        boolean trueFlag = false;
+        boolean[] requiredStep = new boolean[20];
+        int currentStep = 0;
+        boolean fridayFlag = false;
+
+        while(!trueFlag){
+            System.out.println("\n---------Requesting: " + requestClassTitle + " on " + requestDays + " at " +
+                    requestTime + "---------");
+            //Step 2, 3
+            System.out.println(" * * * * Requesting for TR * * * *");
+            requiredStep[currentStep] = requestTR(clsTuesday, clsThursday, requestTime, requestClassTitle);
+            //Step 4, 5
+            if(!requiredStep[currentStep]){
+                System.out.println(" * * * * Requesting for MW * * * *");
+                currentStep++;
+                requiredStep[currentStep] = requestMW(clsMonday, clsWednesday, requestTime, requestClassTitle);
+            }
+            //Steps 6 -> 9
+            if(!requiredStep[currentStep]){
+                boolean flag = false;
+                System.out.println(" * * * * Requesting for TR * * * *");
+                while(!flag){
+                    if(requiredStep[currentStep] || index == arlCredit.size()-1){
+                        index = 0;
+                        flag = true;
+                    } else {
+                        index++;
+                        currentStep++;
+                        requestTime = arlCredit.get(index);
+                        requiredStep[currentStep] = requestTR(clsTuesday, clsThursday, requestTime, requestClassTitle);
+                    }
+                }
+            }
+            //Steps 10 -> 15
+            if(!requiredStep[currentStep]){
+                boolean flag = false;
+                index = 0;
+                System.out.println(" * * * * Requesting for MW * * * *");
+                while(!flag){
+                    if(requiredStep[currentStep] || index == arlCredit.size()){
+                        index = 0;
+                        flag = true;
+                    } else {
+                        requestTime = arlCredit.get(index);
+                        requiredStep[currentStep] = requestMW(clsMonday, clsWednesday, requestTime, requestClassTitle);
+                        if(!requiredStep[currentStep]){
+                            currentStep++;
+                            index++;
+                        }
+                    }
+                }
+            }
+            //Steps 16, 17
+            if(!requiredStep[currentStep]){
+                index = 0;
+                boolean flag = false;
+                System.out.println(" * * * * Requesting for TR * * * *");
+                while(!flag){
+                    if(requiredStep[currentStep] || index == ORGINAL_INDEX){
+                        flag = true;
+                    } else {
+                        requestTime = arlCredit.get(index);
+                        requiredStep[currentStep] = requestTR(clsTuesday, clsThursday, requestTime, requestClassTitle);
+                        if(!requiredStep[currentStep]){
+                            currentStep++;
+                            index++;
+                        }
+                    }
+                }
+            }
+
+
+            if(requiredStep[currentStep])
+                trueFlag = true;
+            else if(!requiredStep[currentStep] && index == ORGINAL_INDEX){
+                fridayFlag = true;
+                trueFlag =true;
+            }
+        }
+        if(fridayFlag){
+            System.out.println("------> FRIDAY FRIDAY FRIDAY : " + requestClassTitle
+                    + " at " + requestTime + " <--------");
         }
     }
 
@@ -313,6 +485,47 @@ public class Scheduler {
 
     public static boolean requestMW(Day clsMon, Day clsWed, String requestTime, String requestClassTitle) throws ParseException {
         System.out.println(" For Class A");
+        boolean class_A =  class_Scheduler(clsMon.hm_ClassA, requestTime, requestClassTitle) &&
+                            class_Scheduler(clsWed.hm_ClassA, requestTime, requestClassTitle);
+        boolean class_B = true;
+        boolean class_C = true;
+
+        if(!class_A){
+            System.out.println(" For Class B:");
+            class_B = class_Scheduler(clsMon.hm_ClassB, requestTime, requestClassTitle) &&
+                    class_Scheduler(clsWed.hm_ClassB, requestTime, requestClassTitle);
+            if(!class_B){
+                System.out.println(" For Class C:");
+                class_C = class_Scheduler(clsMon.hm_ClassC, requestTime, requestClassTitle) &&
+                        class_Scheduler(clsWed.hm_ClassC, requestTime, requestClassTitle);
+            }
+        }
+        return class_A || class_B || class_C;
+    }
+
+    public static boolean requestTR(Day clsTues, Day clsThurs, String requestTime, String requestClassTitle) throws ParseException {
+        System.out.println(" For Class A");
+        boolean class_A = class_Scheduler(clsTues.hm_ClassA, requestTime, requestClassTitle) &&
+                            class_Scheduler(clsThurs.hm_ClassA, requestTime, requestClassTitle);
+        boolean class_B = true;
+        boolean class_C = true;
+
+        if(!class_A){
+            System.out.println(" For Class B:");
+            class_B = class_Scheduler(clsTues.hm_ClassB, requestTime, requestClassTitle) &&
+                    class_Scheduler(clsThurs.hm_ClassB, requestTime, requestClassTitle);
+            if(!class_B){
+                System.out.println(" For Class C:");
+                class_C = class_Scheduler(clsTues.hm_ClassC, requestTime, requestClassTitle) &&
+                        class_Scheduler(clsThurs.hm_ClassC, requestTime, requestClassTitle);
+            }
+        }
+
+        return class_A || class_B || class_C;
+    }
+
+    public static boolean requestM(Day clsMon, String requestTime, String requestClassTitle) throws ParseException {
+        System.out.println(" For Class A");
         boolean class_A = class_Scheduler(clsMon.hm_ClassA, requestTime, requestClassTitle);
         boolean class_B = true;
         boolean class_C = true;
@@ -323,25 +536,6 @@ public class Scheduler {
             if(!class_B){
                 System.out.println(" For Class C:");
                 class_C = class_Scheduler(clsMon.hm_ClassC, requestTime, requestClassTitle);
-            }
-        }
-
-      //  clsMon.getHm_4CreditHours().put(requestTime, true);
-        return class_A || class_B || class_C;
-    }
-
-    public static boolean requestTR(Day clsTues, Day clsThurs, String requestTime, String requestClassTitle) throws ParseException {
-        System.out.println(" For Class A");
-        boolean class_A = class_Scheduler(clsTues.hm_ClassA, requestTime, requestClassTitle);
-        boolean class_B = true;
-        boolean class_C = true;
-
-        if(!class_A){
-            System.out.println(" For Class B:");
-            class_B = class_Scheduler(clsTues.hm_ClassB, requestTime, requestClassTitle);
-            if(!class_B){
-                System.out.println(" For Class C:");
-                class_C = class_Scheduler(clsTues.hm_ClassC, requestTime, requestClassTitle);
             }
         }
 
