@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -5,11 +6,13 @@ public class Day {
     protected HashMap<String, String> hm_ClassA;
     protected HashMap<String, String> hm_ClassB;
     protected HashMap<String, String> hm_ClassC;
+    protected ArrayList<String> arlScheduledClasses;
 
     public Day() {
         this.hm_ClassA = new HashMap<>();
         this.hm_ClassB = new HashMap<>();
         this.hm_ClassC = new HashMap<>();
+        this.arlScheduledClasses = new ArrayList<>();
     }
 
     public HashMap<String, String> getHm_ClassA() {
@@ -36,12 +39,13 @@ public class Day {
         this.hm_ClassC = new HashMap<>(hm_ClassC);
     }
 
-    public void printOutput(){
+    public void scheduleClasses(){
         System.out.println("Class A : ");
         for (Map.Entry<String, String> s : hm_ClassA.entrySet()
         ) {
             if (!s.getValue().equals("Available")) {
-                System.out.println("\t" + s.getKey() + " -> " + s.getValue());
+            //    System.out.println("\t" + s.getKey() + " -> " + s.getValue());
+                arlScheduledClasses.add(s.getValue() + " " + s.getKey() + " A ");
             }
         }
 
@@ -49,7 +53,8 @@ public class Day {
         for (Map.Entry<String, String> s : hm_ClassB.entrySet()
         ) {
             if (!s.getValue().equals("Available")) {
-                System.out.println("\t" + s.getKey() + " -> " + s.getValue());
+            //    System.out.println("\t" + s.getKey() + " -> " + s.getValue());
+                arlScheduledClasses.add(s.getValue() + " " + s.getKey() + " B ");
             }
         }
 
@@ -57,7 +62,8 @@ public class Day {
         for (Map.Entry<String, String> s : hm_ClassC.entrySet()
         ) {
             if (!s.getValue().equals("Available")) {
-                System.out.println("\t" + s.getKey() + " -> " + s.getValue());
+           //     System.out.println("\t" + s.getKey() + " -> " + s.getValue());
+                arlScheduledClasses.add(s.getValue() + " " + s.getKey() + " C ");
             }
         }
     }

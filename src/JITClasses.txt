@@ -36,6 +36,3 @@ CSC 107	Smith	W	3:00	4:00
 CSC 107	Jones	M	3:00	4:00
 CSC 107	Vasquez	R	12:00	1:00
 CSC 107	Thomas	M	10:00	11:00
-
-
-

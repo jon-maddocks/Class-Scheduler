@@ -1,14 +1,21 @@
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 
 public class DBTest {
 
     final static String DATABASE_FILE = "SQLiteTest1.db";
     final static String CLASSES_FILE = "JITClasses.txt";
+    static final int CLASS_ID = 0;
+    static final int CLASS_PROFESSOR = 1;
+    static final int CLASS_DAYS = 2;
+    static final int CLASS_START_TIME = 3;
+    static final int CLASS_END_TIME = 4;
+
     private static Connection getConnection() throws ClassNotFoundException, SQLException {
         Connection con;
         //Database path -- if it's new database, it will be created in the project folder
@@ -27,79 +34,93 @@ public class DBTest {
         int class_tuid = 1;
 
         BufferedReader bfReader;
-        try{
-            bfReader = new BufferedReader(new FileReader(CLASSES_FILE));
+        ArrayList<String> arlClasses = new ArrayList<>();
+        Scheduler scheduler = new Scheduler();
+        ArrayList<String> arlScheduled = new ArrayList<>(scheduler.getClasses());
+        try {
+      //      bfReader = new BufferedReader(new FileReader(CLASSES_FILE));
             con = getConnection();
-            while(true){
-                String line = bfReader.readLine();
-                if(line == null)
-                    break;
-                arrSplit = trimCourseID(line).split("\\s+", 5);
-                ArrayList<String> arrList = new ArrayList<>(Arrays.asList(arrSplit));
+            if (!DBExists) {
+                DBExists = true;
+
+                //check for database table existence and if it's not there, create it and add 2 records
+                state = con.createStatement();
+                res = state.executeQuery("SELECT * FROM sqlite_master WHERE type='table' AND name='Schedule_Table'");
+
+                if (!res.next()) {
+                    System.out.println("Building the SCHEDULE_TABLE table");
+                    state2 = con.createStatement();
+                    state2.executeUpdate("CREATE TABLE IF NOT EXISTS Schedule_Table(" +
+                            "TUID INTEGER, " +
+                            "Course_TUID INTEGER," +
+                            "Section INTEGER," +
+                            "Classroom_TUID INTEGER," +
+                            "Professor_TUID INTEGER," +
+                            "Start_Time VARCHAR(5)," +
+                            "End_Time VARCHAR(5)," +
+                            "Days VARCHAR(2)," +
+                            "PRIMARY KEY (TUID));");
+                }
+            }
+             //   String line = bfReader.readLine();
+              //  if (line == null)
+             //       break;
+                for (String s : arlScheduled
+                     ) {
+                    arrSplit = s.split("\\s+", 7);
+                    ArrayList<String> arrList = new ArrayList<>(Arrays.asList(arrSplit));
+                    String[] arrSplitTimes = arrList.get(2).split("-", 2);
+                    //arlClasses.add(arrList.get(CLASS_ID));
+
+                    //Add a couple of records using parameters
+                    System.out.println("Add record 1 to Schedule Table table");
+                    System.out.println(s);
+                    prep = con.prepareStatement("INSERT INTO Schedule_Table VALUES(?,?,?,?,?,?,?,?);");
+                    prep.setInt(1, class_tuid);
+                    //Get course tuid
+                    prep.setInt(2, Integer.parseInt(getClassTUID(arrList.get(0))));
+                    //set course section number
+                    prep.setInt(3, Integer.parseInt(arrList.get(1)));
+                    //get classroom tuid
+                    prep.setInt(4, Integer.parseInt(getClassroomTUID(arrList.get(3))));
+                    //get professor tuid
+                    prep.setInt(5, Integer.parseInt(getProfessorTUID(arrList.get(5))));
+
+                    //get start time
+                    prep.setString(6, arrSplitTimes[0]);
+                    //get end time
+                    prep.setString(7, arrSplitTimes[1]);
+                    //get days
+                    prep.setString(8, arrList.get(4));
+                    prep.execute();
+
+                    class_tuid++;
+                }
                 /*
                     0: CSC105
                     1: James
                     2: MW
                     3: 8:30
                     4: 10:30
+
+                    From scheduler
+                    CSC105-01 08:30-10:30 A  MW
+                    0: CSC105       CLASS_ID
+                    1: 01           SECTION_NUM
+                    2: 8:30-10:30   START_TIME
+                    3: A            CLASSROOM
+                    4: MW           DAYS
+                    5: James        PROFESSOR
                  */
 
-                if(!DBExists){
-                    DBExists = true;
 
-                    //check for database table existence and if it's not there, create it and add 2 records
-                    state = con.createStatement();
-                    res = state.executeQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='user'");
-
-
-                    if(!res.next()){
-                        System.out.println("Building the SCHEDULE_TABLE table");
-                        state2 = con.createStatement();
-                        state2.executeUpdate("CREATE TABLE IF NOT EXISTS Schedule_Table(" +
-                                "TUID INTEGER, " +
-                                "Course_TUID INTEGER," +
-                                "Section INTEGER," +
-                                "Classroom_TUID INTEGER," +
-                                "Professor_TUID INTEGER," +
-                                "Start_Time VARCHAR(5)," +
-                                "End_Time VARCHAR(5)," +
-                                "Days VARCHAR(2)," +
-                                "PRIMARY KEY (TUID));");
-                    }
-                }
-                //Add a couple of records using parameters
-                System.out.println("Add record 1 to Schedule Table table");
-                prep = con.prepareStatement("INSERT INTO Schedule_Table VALUES(?,?,?,?,?,?,?,?);");
-                prep.setInt(1,class_tuid);
-
-                //Get course tuid
-                prep.setInt(2,Integer.parseInt(getClassTUID(arrList.get(0))));
-
-                //set course section number
-                prep.setInt(3,999);
-
-                //get classroom tuid
-                prep.setInt(4,999);
-
-                //get professor tuid
-                prep.setInt(5,Integer.parseInt(getProfessorTUID(arrList.get(1))));
-
-
-                prep.setString(6, arrList.get(3));
-                prep.setString(7, arrList.get(4));
-                prep.setString(8, arrList.get(2));
-                prep.execute();
-
-                class_tuid++;
-
-            }
-            bfReader.close();
-        } catch (Exception e){
+     //       bfReader.close();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static void buildCourses(boolean DBExists) throws ClassNotFoundException, SQLException{
+    public static void buildCourses(boolean DBExists) throws ClassNotFoundException, SQLException {
         Connection con;
         Statement state, state2;
         ResultSet res;
@@ -126,13 +147,13 @@ public class DBTest {
 
 
         con = getConnection();
-        if(!DBExists){
+        if (!DBExists) {
             DBExists = true;
 
             //check for database table existence and if it's not there, create it and add 2 records
             state = con.createStatement();
-            res = state.executeQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='user'");
-            if(!res.next()){
+            res = state.executeQuery("SELECT * FROM sqlite_master WHERE type='table' AND name='Courses_Table'");
+            if (!res.next()) {
                 System.out.println("Building the COURSES_TABLE table");
                 state2 = con.createStatement();
                 state2.executeUpdate("CREATE TABLE IF NOT EXISTS Courses_Table(" +
@@ -145,22 +166,21 @@ public class DBTest {
                         "FOREIGN KEY (TUID)," +
                         "REFERENCES Schedule_Table(Course_TUID));"); */
             }
-        }
+            for (int i = 0; i < arlCatalog.size(); i++) {
+                String[] arrSplit = arlCatalog.get(i).split(";", 3);
+                courses_tuid++;
 
-        for(int i = 0; i < arlCatalog.size(); i++){
-            String[] arrSplit = arlCatalog.get(i).split(";", 3);
-            courses_tuid++;
-
-            prep = con.prepareStatement("INSERT INTO Courses_Table VALUES(?,?,?,?);");
-            prep.setInt(1,courses_tuid);
-            prep.setString(2,arrSplit[0]);
-            prep.setString(3,arrSplit[1]);
-            prep.setInt(4,Integer.parseInt(arrSplit[2]));
-            prep.execute();
+                prep = con.prepareStatement("INSERT INTO Courses_Table VALUES(?,?,?,?);");
+                prep.setInt(1, courses_tuid);
+                prep.setString(2, arrSplit[0]);
+                prep.setString(3, arrSplit[1]);
+                prep.setInt(4, Integer.parseInt(arrSplit[2]));
+                prep.execute();
+            }
         }
     }
 
-    public static void buildProfessors(boolean DBExists) throws ClassNotFoundException, SQLException{
+    public static void buildProfessors(boolean DBExists) throws ClassNotFoundException, SQLException {
         Connection con;
         Statement state, state2;
         ResultSet res;
@@ -176,13 +196,13 @@ public class DBTest {
         arlProfessors.add("Thomas");
 
         con = getConnection();
-        if(!DBExists){
+        if (!DBExists) {
             DBExists = true;
 
             //check for database table existence and if it's not there, create it and add 2 records
             state = con.createStatement();
-            res = state.executeQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='user'");
-            if(!res.next()){
+            res = state.executeQuery("SELECT * FROM sqlite_master WHERE type='table' AND name='Professors_Table'");
+            if (!res.next()) {
                 System.out.println("Building the PROFESSORS_TABLE table");
                 state2 = con.createStatement();
                 state2.executeUpdate("CREATE TABLE IF NOT EXISTS Professors_Table(" +
@@ -192,20 +212,20 @@ public class DBTest {
             }
 
 
-            for(int i =0; i < arlProfessors.size(); i++){
+            for (int i = 0; i < arlProfessors.size(); i++) {
                 courses_tuid++;
                 //Add a couple of records using parameters
                 System.out.println("Add record 1 to Professors table");
                 prep = con.prepareStatement("INSERT INTO Professors_Table VALUES(?,?);");
-                prep.setInt(1,courses_tuid);
-                prep.setString(2,arlProfessors.get(i));
+                prep.setInt(1, courses_tuid);
+                prep.setString(2, arlProfessors.get(i));
                 prep.execute();
             }
 
         }
     }
 
-    public static void buildClassrooms(boolean DBExists) throws ClassNotFoundException, SQLException{
+    public static void buildClassrooms(boolean DBExists) throws ClassNotFoundException, SQLException {
         Connection con;
         Statement state, state2;
         ResultSet res;
@@ -218,13 +238,11 @@ public class DBTest {
         arlClassrooms.add("C;20");
 
         con = getConnection();
-        if(!DBExists){
-            DBExists = true;
-
+        if (!DBExists) {
             //check for database table existence and if it's not there, create it and add 2 records
             state = con.createStatement();
-            res = state.executeQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='user'");
-            if(!res.next()){
+            res = state.executeQuery("SELECT * FROM sqlite_master WHERE type='table' AND name='Classroom_Table'");
+            if (!res.next()) {
                 System.out.println("Building the CLASSROOM_TABLE table");
                 state2 = con.createStatement();
                 state2.executeUpdate("CREATE TABLE IF NOT EXISTS Classroom_Table(" +
@@ -233,34 +251,32 @@ public class DBTest {
                         "Capacity INTEGER," +
                         "PRIMARY KEY (TUID));");
             }
-
-            for(int i = 0; i < arlClassrooms.size(); i++){
+            for (int i = 0; i < arlClassrooms.size(); i++) {
                 courses_tuid++;
-                String[] arrSplit = arlClassrooms.get(i).split(";",2);
+                String[] arrSplit = arlClassrooms.get(i).split(";", 2);
 
                 //Add a couple of records using parameters
                 System.out.println("Add record 1 to Classroom table");
                 prep = con.prepareStatement("INSERT INTO Classroom_Table VALUES(?,?,?);");
-                prep.setInt(1,courses_tuid);
-                prep.setString(2,arrSplit[0]);
-                prep.setInt(3,Integer.parseInt(arrSplit[1]));
+                prep.setInt(1, courses_tuid);
+                prep.setString(2, arrSplit[0]);
+                prep.setInt(3, Integer.parseInt(arrSplit[1]));
                 prep.execute();
             }
         }
 
 
-
     }
 
 
-    public static void deleteDatabase() throws ClassNotFoundException, SQLException{
-        try{
+    public static void deleteDatabase() throws ClassNotFoundException, SQLException {
+        try {
             Connection conn = getConnection();
             Statement statement = conn.createStatement();
             String dropTable = "DROP DATABASE USER";
             statement.executeUpdate(dropTable);
             System.out.println("Database deleted . . . ");
-        } catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -271,7 +287,7 @@ public class DBTest {
         ResultSet res;
         Connection con = null;
 
-        if(con == null){
+        if (con == null) {
             //Get Database Connection
             con = getConnection();
         }
@@ -281,20 +297,20 @@ public class DBTest {
         return res;
     }
 
-    public static String trimCourseID(String strLine){
+    public static String trimCourseID(String strLine) {
         StringBuilder strTrim = new StringBuilder();
 
-        for(int i = 0; i < strLine.length(); i++){
-            if(i != 3)
+        for (int i = 0; i < strLine.length(); i++) {
+            if (i != 3)
                 strTrim.append(strLine.charAt(i));
         }
 
         return strTrim.toString();
     }
 
-    public static String getClassTUID(String strClass){
+    public static String getClassTUID(String strClass) {
         String strSQL = "Select TUID " +
-                        "FROM Courses_Table WHERE Course_ID = ?";
+                "FROM Courses_Table WHERE Course_ID = ?";
         String strResult = "";
 
         try {
@@ -303,16 +319,16 @@ public class DBTest {
             prepStatement.setString(1, strClass);
             ResultSet rs = prepStatement.executeQuery();
 
-            while(rs.next()){
+            while (rs.next()) {
                 strResult = rs.getString("TUID");
             }
-        } catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return strResult;
     }
 
-    public static String getProfessorTUID(String strClass){
+    public static String getProfessorTUID(String strClass) {
         String strSQL = "Select TUID " +
                 "FROM Professors_Table WHERE Professor_Name = ?";
         String strResult = "";
@@ -323,24 +339,62 @@ public class DBTest {
             prepStatement.setString(1, strClass);
             ResultSet rs = prepStatement.executeQuery();
 
-            while(rs.next()){
+            while (rs.next()) {
                 strResult = rs.getString("TUID");
             }
-        } catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return strResult;
+    }
+
+    public static String getClassroomTUID(String strClass) {
+        String strSQL = "Select TUID " +
+                "FROM Classroom_Table WHERE Classroom_Name = ?";
+        String strResult = "";
+
+        try {
+            Connection conn = getConnection();
+            PreparedStatement prepStatement = conn.prepareStatement(strSQL);
+            prepStatement.setString(1, strClass);
+            ResultSet rs = prepStatement.executeQuery();
+
+            while (rs.next()) {
+                strResult = rs.getString("TUID");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return strResult;
+    }
+
+    public static int sectionNumber(ArrayList<String> arlClass){
+        HashMap<String, Integer> hmSectionNum = new HashMap<>();
+        int sectionNum = 0;
+        for(String s : arlClass){
+            Integer intTemp = hmSectionNum.get(s);
+            sectionNum = (intTemp == null) ? 1 : intTemp+1;
+            hmSectionNum.put(s, sectionNum);
+        }
+
+        return sectionNum;
+    }
+
+    public static boolean databaseExists() {
+        File file = new File(DATABASE_FILE);
+        return file.exists();
     }
 
 
     public static void main(String[] args) {
         ResultSet res;
         Connection con;
-        boolean DBExists = false;
+        boolean DBExists = databaseExists();
+
 
         try {
             getConnection();
-          //  deleteDatabase();
+            //  deleteDatabase();
             buildCourses(DBExists);
             buildProfessors(DBExists);
             buildClassrooms(DBExists);
@@ -362,14 +416,14 @@ public class DBTest {
  */
 
 
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 }
 
 /*  In order to run:
-*       javac DBTest.java
-*       java -classpath ".;sqlite-jdbc-3.39.3.0.jar" DBTest
-*
-* */
+ *       javac DBTest.java
+ *       java -classpath ".;sqlite-jdbc-3.39.3.0.jar" DBTest
+ *
+ * */
