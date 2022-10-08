@@ -44,7 +44,7 @@ public class Day {
         for (Map.Entry<String, String> s : hm_ClassA.entrySet()
         ) {
             if (!s.getValue().equals("Available")) {
-            //    System.out.println("\t" + s.getKey() + " -> " + s.getValue());
+                System.out.println("\t" + s.getKey() + " -> " + s.getValue());
                 arlScheduledClasses.add(s.getValue() + " " + s.getKey() + " A ");
             }
         }
@@ -53,7 +53,7 @@ public class Day {
         for (Map.Entry<String, String> s : hm_ClassB.entrySet()
         ) {
             if (!s.getValue().equals("Available")) {
-            //    System.out.println("\t" + s.getKey() + " -> " + s.getValue());
+                System.out.println("\t" + s.getKey() + " -> " + s.getValue());
                 arlScheduledClasses.add(s.getValue() + " " + s.getKey() + " B ");
             }
         }
@@ -62,7 +62,7 @@ public class Day {
         for (Map.Entry<String, String> s : hm_ClassC.entrySet()
         ) {
             if (!s.getValue().equals("Available")) {
-           //     System.out.println("\t" + s.getKey() + " -> " + s.getValue());
+               System.out.println("\t" + s.getKey() + " -> " + s.getValue());
                 arlScheduledClasses.add(s.getValue() + " " + s.getKey() + " C ");
             }
         }
