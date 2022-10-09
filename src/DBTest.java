@@ -1,6 +1,4 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,13 +38,10 @@ public class DBTest extends Scheduler {
 
         String[] arrSplit;
         int class_tuid = 1;
-
-        BufferedReader bfReader;
-        ArrayList<String> arlClasses = new ArrayList<>();
         Scheduler scheduler = new Scheduler();
+        runScheduler();
         ArrayList<String> arlScheduled = new ArrayList<>(getClasses());
         try {
-            //      bfReader = new BufferedReader(new FileReader(CLASSES_FILE));
             con = getConnection();
 
             if (!DBExists) {
@@ -56,7 +51,7 @@ public class DBTest extends Scheduler {
                 state = con.createStatement();
                 res = state.executeQuery("SELECT * FROM sqlite_master WHERE type='table' AND name='Schedule_Table'");
                 if (!res.next()) {
-                    System.out.println("Building the SCHEDULE_TABLE table");
+                    System.out.println("Building the SCHEDULE_TABLE table . . .");
                     state2 = con.createStatement();
                     state2.executeUpdate("CREATE TABLE IF NOT EXISTS Schedule_Table(" +
                             "TUID INTEGER, " +
@@ -73,7 +68,6 @@ public class DBTest extends Scheduler {
             String tableCount = "SELECT count(*) FROM Schedule_Table";
             prep = con.prepareStatement(tableCount);
             ResultSet rs = prep.executeQuery();
-            // System.out.println(rs.getString(1));
             int result = Integer.parseInt(rs.getString(1));
 
             if (result == 0) {
@@ -82,15 +76,9 @@ public class DBTest extends Scheduler {
                     arrSplit = s.split("\\s+", 7);
                     ArrayList<String> arrList = new ArrayList<>(Arrays.asList(arrSplit));
                     String[] arrSplitTimes = arrList.get(2).split("-", 2);
-                    //arlClasses.add(arrList.get(CLASS_ID));
                     arlScheduledClasses.add(arrSplit[0] + " " + arrSplit[5] + " " + arrSplit[4] +
                             " " + arrSplitTimes[0] + " " + arrSplitTimes[1]);
 
-                    // ----------------- NEEDS UPDATE -------------------------- //
-
-                    //Add a couple of records using parameters
-                    System.out.println("Add record 1 to Schedule Table table");
-                    System.out.println(s);
                     prep = con.prepareStatement("INSERT INTO Schedule_Table VALUES(?,?,?,?,?,?,?,?);");
                     prep.setInt(1, class_tuid);
                     //Get course tuid
@@ -101,38 +89,16 @@ public class DBTest extends Scheduler {
                     prep.setInt(4, Integer.parseInt(getClassroomTUID(arrList.get(3))));
                     //get professor tuid
                     prep.setInt(5, Integer.parseInt(getProfessorTUID(arrList.get(5))));
-
                     //get start time
                     prep.setString(6, arrSplitTimes[0]);
                     //get end time
                     prep.setString(7, arrSplitTimes[1]);
                     //get days
                     prep.setString(8, arrList.get(4));
-
                     prep.execute();
-
                     class_tuid++;
                 }
             }
-                /*
-                    0: CSC105
-                    1: James
-                    2: MW
-                    3: 8:30
-                    4: 10:30
-
-                    From scheduler
-                    CSC105-01 08:30-10:30 A  MW
-                    0: CSC105       CLASS_ID
-                    1: 01           SECTION_NUM
-                    2: 8:30-10:30   START_TIME
-                    3: A            CLASSROOM
-                    4: MW           DAYS
-                    5: James        PROFESSOR
-                 */
-
-
-            //       bfReader.close();
             con.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -141,8 +107,6 @@ public class DBTest extends Scheduler {
 
     public static void updateDatabase() {
         Connection con;
-        Statement state, state2;
-        ResultSet res;
         PreparedStatement prep;
 
 
@@ -150,55 +114,42 @@ public class DBTest extends Scheduler {
 
         ArrayList<String> arlScheduled = new ArrayList<>(getClasses());
         try {
-            //      bfReader = new BufferedReader(new FileReader(CLASSES_FILE));
             con = getConnection();
-
-            String tableCount = "SELECT count(*) FROM Schedule_Table";
-            prep = con.prepareStatement(tableCount);
-            ResultSet rs = prep.executeQuery();
-            // System.out.println(rs.getString(1));
             int class_TUID = 1;
 
+            System.out.println("Adding records to Schedule_Table . . .");
+            for (String s : arlScheduled
+            ) {
+                arrSplit = s.split("\\s+", 7);
+                ArrayList<String> arrList = new ArrayList<>(Arrays.asList(arrSplit));
+                String[] arrSplitTimes = arrList.get(2).split("-", 2);
+                arlScheduledClasses.add(arrSplit[0] + " " + arrSplit[5] + " " + arrSplit[4] +
+                        " " + arrSplitTimes[0] + " " + arrSplitTimes[1]);
 
-                for (String s : arlScheduled
-                ) {
-                    arrSplit = s.split("\\s+", 7);
-                    ArrayList<String> arrList = new ArrayList<>(Arrays.asList(arrSplit));
-                    String[] arrSplitTimes = arrList.get(2).split("-", 2);
-                    //arlClasses.add(arrList.get(CLASS_ID));
-                    arlScheduledClasses.add(arrSplit[0] + " " + arrSplit[5] + " " + arrSplit[4] +
-                            " " + arrSplitTimes[0] + " " + arrSplitTimes[1]);
-
-                    //Add a couple of records using parameters
-                    System.out.println("Add record 1 to Schedule Table table");
-                    System.out.println(s);
-                    prep = con.prepareStatement("INSERT or IGNORE INTO Schedule_Table VALUES(?,?,?,?,?,?,?,?);");
-                    prep.setInt(1, class_TUID);
-                    //Get course tuid
-                    prep.setInt(2, Integer.parseInt(getClassTUID(arrList.get(0))));
-                    //set course section number
-                    prep.setInt(3, Integer.parseInt(arrList.get(1)));
-                    //get classroom tuid
-                    prep.setInt(4, Integer.parseInt(getClassroomTUID(arrList.get(3))));
-                    //get professor tuid
-                    prep.setInt(5, Integer.parseInt(getProfessorTUID(arrList.get(5))));
-
-                    //get start time
-                    prep.setString(6, arrSplitTimes[0]);
-                    //get end time
-                    prep.setString(7, arrSplitTimes[1]);
-                    //get days
-                    prep.setString(8, arrList.get(4));
-
-                    prep.execute();
-
-                    class_TUID++;
-                }
+                prep = con.prepareStatement("INSERT or IGNORE INTO Schedule_Table VALUES(?,?,?,?,?,?,?,?);");
+                prep.setInt(1, class_TUID);
+                //Get course tuid
+                prep.setInt(2, Integer.parseInt(getClassTUID(arrList.get(0))));
+                //set course section number
+                prep.setInt(3, Integer.parseInt(arrList.get(1)));
+                //get classroom tuid
+                prep.setInt(4, Integer.parseInt(getClassroomTUID(arrList.get(3))));
+                //get professor tuid
+                prep.setInt(5, Integer.parseInt(getProfessorTUID(arrList.get(5))));
+                //get start time
+                prep.setString(6, arrSplitTimes[0]);
+                //get end time
+                prep.setString(7, arrSplitTimes[1]);
+                //get days
+                prep.setString(8, arrList.get(4));
+                prep.execute();
+                class_TUID++;
+            }
+            System.out.println("* * New records have been added * *");
             con.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     public static void buildCourses(boolean DBExists) throws ClassNotFoundException, SQLException {
@@ -226,16 +177,12 @@ public class DBTest extends Scheduler {
         arlCatalog.add("CSC497;Software Engineering II;4");
         arlCatalog.add("CSC498;Software Engineering III;4");
 
-
         con = getConnection();
         if (!DBExists) {
-            DBExists = true;
-
-            //check for database table existence and if it's not there, create it and add 2 records
             state = con.createStatement();
             res = state.executeQuery("SELECT * FROM sqlite_master WHERE type='table' AND name='Courses_Table'");
             if (!res.next()) {
-                System.out.println("Building the COURSES_TABLE table");
+                System.out.println("Building the COURSES_TABLE table . . .");
                 state2 = con.createStatement();
                 state2.executeUpdate("CREATE TABLE IF NOT EXISTS Courses_Table(" +
                         "TUID INTEGER, " +
@@ -243,14 +190,10 @@ public class DBTest extends Scheduler {
                         "Course_Title VARCHAR(60)," +
                         "Credit_Hours INTEGER," +
                         "PRIMARY KEY (TUID));");
-                 /*
-                        "FOREIGN KEY (TUID)," +
-                        "REFERENCES Schedule_Table(Course_TUID));"); */
             }
             for (int i = 0; i < arlCatalog.size(); i++) {
                 String[] arrSplit = arlCatalog.get(i).split(";", 3);
                 courses_tuid++;
-
                 prep = con.prepareStatement("INSERT INTO Courses_Table VALUES(?,?,?,?);");
                 prep.setInt(1, courses_tuid);
                 prep.setString(2, arrSplit[0]);
@@ -279,13 +222,10 @@ public class DBTest extends Scheduler {
 
         con = getConnection();
         if (!DBExists) {
-            DBExists = true;
-
-            //check for database table existence and if it's not there, create it and add 2 records
             state = con.createStatement();
             res = state.executeQuery("SELECT * FROM sqlite_master WHERE type='table' AND name='Professors_Table'");
             if (!res.next()) {
-                System.out.println("Building the PROFESSORS_TABLE table");
+                System.out.println("Building the PROFESSORS_TABLE table . . .");
                 state2 = con.createStatement();
                 state2.executeUpdate("CREATE TABLE IF NOT EXISTS Professors_Table(" +
                         "TUID INTEGER, " +
@@ -293,11 +233,8 @@ public class DBTest extends Scheduler {
                         "PRIMARY KEY (TUID));");
             }
 
-
             for (int i = 0; i < arlProfessors.size(); i++) {
                 courses_tuid++;
-                //Add a couple of records using parameters
-                System.out.println("Add record 1 to Professors table");
                 prep = con.prepareStatement("INSERT INTO Professors_Table VALUES(?,?);");
                 prep.setInt(1, courses_tuid);
                 prep.setString(2, arlProfessors.get(i));
@@ -322,11 +259,10 @@ public class DBTest extends Scheduler {
 
         con = getConnection();
         if (!DBExists) {
-            //check for database table existence and if it's not there, create it and add 2 records
             state = con.createStatement();
             res = state.executeQuery("SELECT * FROM sqlite_master WHERE type='table' AND name='Classroom_Table'");
             if (!res.next()) {
-                System.out.println("Building the CLASSROOM_TABLE table");
+                System.out.println("Building the CLASSROOM_TABLE table . . .");
                 state2 = con.createStatement();
                 state2.executeUpdate("CREATE TABLE IF NOT EXISTS Classroom_Table(" +
                         "TUID INTEGER, " +
@@ -337,9 +273,6 @@ public class DBTest extends Scheduler {
             for (int i = 0; i < arlClassrooms.size(); i++) {
                 courses_tuid++;
                 String[] arrSplit = arlClassrooms.get(i).split(";", 2);
-
-                //Add a couple of records using parameters
-                System.out.println("Add record 1 to Classroom table");
                 prep = con.prepareStatement("INSERT INTO Classroom_Table VALUES(?,?,?);");
                 prep.setInt(1, courses_tuid);
                 prep.setString(2, arrSplit[0]);
@@ -359,37 +292,25 @@ public class DBTest extends Scheduler {
         try {
             Connection conn = getConnection();
             Statement stmt = conn.createStatement();
+            System.out.println("Deleting : Schedule_Table");
             stmt.executeUpdate(deleteSchedule);
+            System.out.println("Deleting : Professors_Table");
             stmt.executeUpdate(deleteProf);
+            System.out.println("Deleting : Courses_Table");
             stmt.executeUpdate(deleteCourses);
+            System.out.println("Deleting : Classroom_Table");
             stmt.executeUpdate(deleteClassroom);
+            System.out.println(" * * ALL Tables have been deleted! * * ");
             conn.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-
-    public static ResultSet displayUsers() throws SQLException, ClassNotFoundException {
-        Statement state;
-        ResultSet res;
-        Connection con = null;
-
-        if (con == null) {
-            //Get Database Connection
-            con = getConnection();
-        }
-        state = con.createStatement();
-        res = state.executeQuery("SELECT TUID, Course_TUID, Section, Classroom_TUID, Professor_TUID," +
-                "Start_Time, End_Time, Days FROM Schedule_Table");
-        return res;
-    }
-
     public static String getClassTUID(String strClass) {
         String strSQL = "Select TUID " +
                 "FROM Courses_Table WHERE Course_ID = ?";
         String strResult = "";
-
         try {
             Connection conn = getConnection();
             PreparedStatement prepStatement = conn.prepareStatement(strSQL);
@@ -403,7 +324,6 @@ public class DBTest extends Scheduler {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return strResult;
     }
 
@@ -411,7 +331,6 @@ public class DBTest extends Scheduler {
         String strSQL = "Select TUID " +
                 "FROM Professors_Table WHERE Professor_Name = ?";
         String strResult = "";
-
         try {
             Connection conn = getConnection();
             PreparedStatement prepStatement = conn.prepareStatement(strSQL);
@@ -432,7 +351,6 @@ public class DBTest extends Scheduler {
         String strSQL = "Select TUID " +
                 "FROM Classroom_Table WHERE Classroom_Name = ?";
         String strResult = "";
-
         try {
             Connection conn = getConnection();
             PreparedStatement prepStatement = conn.prepareStatement(strSQL);
@@ -460,9 +378,8 @@ public class DBTest extends Scheduler {
                 "WHERE Days = 'TR' OR Days = 'R'";
         String friSQL = "SELECT * FROM Schedule_Table " +
                 "WHERE Days = 'F'";
-   //     Formatter format = new Formatter();
-        String strHeaders = String.format("%15s|%15s|%15s|%15s|%15s|%15s|%15s|%15s|", "TUID", "Course_TUID", "Section", "Classroom_TUID",
-                "Professor_TUID", "Start_Time", "End_Time", "Days");
+        String strHeaders = String.format("%15s|%15s|%15s|%15s|%15s|%15s|%15s|%15s|", "TUID", "Course_TUID",
+                "Section", "Classroom_TUID", "Professor_TUID", "Start_Time", "End_Time", "Days");
 
         try {
             Connection conn = getConnection();
@@ -474,13 +391,13 @@ public class DBTest extends Scheduler {
                     "------------------------------------------------------------");
             System.out.println(strHeaders);
             while (rsMon.next()) {
-                System.out.printf("%15s|%15s|%15s|%15s|%15s|%15s|%15s|%15s|\n", parseLeadZero(rsMon.getString(1)),
+                System.out.printf("%15s|%15s|%15s|%15s|%15s|%15s|%15s|%15s|\n",
+                        parseLeadZero(rsMon.getString(1)),
                         parseLeadZero(rsMon.getString(2)), parseLeadZero(rsMon.getString(3)),
                         parseLeadZero(rsMon.getString(4)), parseLeadZero(rsMon.getString(5)),
                         rsMon.getString(6), rsMon.getString(7),
                         rsMon.getString(8));
             }
-
 
             prepStatement = conn.prepareStatement(tueSQL);
             ResultSet rsTue = prepStatement.executeQuery();
@@ -488,7 +405,8 @@ public class DBTest extends Scheduler {
                     "-----------------------------------------------------------");
             System.out.println(strHeaders);
             while (rsTue.next()) {
-                System.out.printf("%15s|%15s|%15s|%15s|%15s|%15s|%15s|%15s|\n", parseLeadZero(rsTue.getString(1)),
+                System.out.printf("%15s|%15s|%15s|%15s|%15s|%15s|%15s|%15s|\n",
+                        parseLeadZero(rsTue.getString(1)),
                         parseLeadZero(rsTue.getString(2)), parseLeadZero(rsTue.getString(3)),
                         parseLeadZero(rsTue.getString(4)), parseLeadZero(rsTue.getString(5)),
                         rsTue.getString(6), rsTue.getString(7),
@@ -501,7 +419,8 @@ public class DBTest extends Scheduler {
                     "---------------------------------------------------------");
             System.out.println(strHeaders);
             while (rsWed.next()) {
-                System.out.printf("%15s|%15s|%15s|%15s|%15s|%15s|%15s|%15s|\n", parseLeadZero(rsWed.getString(1)),
+                System.out.printf("%15s|%15s|%15s|%15s|%15s|%15s|%15s|%15s|\n",
+                        parseLeadZero(rsWed.getString(1)),
                         parseLeadZero(rsWed.getString(2)), parseLeadZero(rsWed.getString(3)),
                         parseLeadZero(rsWed.getString(4)), parseLeadZero(rsWed.getString(5)),
                         rsWed.getString(6), rsWed.getString(7),
@@ -514,7 +433,8 @@ public class DBTest extends Scheduler {
                     "----------------------------------------------------------");
             System.out.println(strHeaders);
             while (rsThu.next()) {
-                System.out.printf("%15s|%15s|%15s|%15s|%15s|%15s|%15s|%15s|\n", parseLeadZero(rsThu.getString(1)),
+                System.out.printf("%15s|%15s|%15s|%15s|%15s|%15s|%15s|%15s|\n",
+                        parseLeadZero(rsThu.getString(1)),
                         parseLeadZero(rsThu.getString(2)), parseLeadZero(rsThu.getString(3)),
                         parseLeadZero(rsThu.getString(4)), parseLeadZero(rsThu.getString(5)),
                         rsThu.getString(6), rsThu.getString(7),
@@ -528,13 +448,13 @@ public class DBTest extends Scheduler {
                     "------------------------------------------------------------");
             System.out.println(strHeaders);
             while (rsFri.next()) {
-                System.out.printf("%15s|%15s|%15s|%15s|%15s|%15s|%15s|%15s|\n", parseLeadZero(rsFri.getString(1)),
+                System.out.printf("%15s|%15s|%15s|%15s|%15s|%15s|%15s|%15s|\n",
+                        parseLeadZero(rsFri.getString(1)),
                         parseLeadZero(rsFri.getString(2)), parseLeadZero(rsFri.getString(3)),
                         parseLeadZero(rsFri.getString(4)), parseLeadZero(rsFri.getString(5)),
                         rsFri.getString(6), rsFri.getString(7),
                         rsFri.getString(8));
             }
-            System.out.println("\n");
             conn.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -548,9 +468,6 @@ public class DBTest extends Scheduler {
                 "INNER JOIN Professors_Table ON Professors_Table.TUID = Schedule_Table.Professor_TUID " +
                 "GROUP BY Professor_TUID" +
                 ";";
-        String strSchedule = "SELECT * " +
-                "FROM Schedule_Table " +
-                "ORDER BY Professor_TUID;";
         try {
             Connection conn = getConnection();
             PreparedStatement prepStatement = conn.prepareStatement(strSQL);
@@ -560,7 +477,6 @@ public class DBTest extends Scheduler {
                 System.out.printf("Professor: %-10s { Total Credit Hours: %-2s }\n%n",
                         rs.getString(1), parseLeadZero(rs.getString(2)));
             }
-            System.out.println("\n");
             conn.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -589,7 +505,6 @@ public class DBTest extends Scheduler {
                         parseLeadZero(rs.getString(3)),
                         rs.getString(4), rs.getString(5));
             }
-            System.out.println("\n");
             conn.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -614,7 +529,8 @@ public class DBTest extends Scheduler {
 
     //if FALSE, read COPY.txt else, read INPUT.txt
     public static boolean initialBoot() {
-        System.out.println("Initial data was found on the database. Would you like to clear it to its initial state? (Y/N): ");
+        System.out.print("Initial data was found on the Database. " +
+                "Would you like to clear all scheduled records? (Y/N): ");
         String strInput = scanner.next();
         boolean flag = true;
         switch (strInput) {
@@ -629,7 +545,6 @@ public class DBTest extends Scheduler {
                 System.out.println("Initial: Try Again!");
                 break;
         }
-
         return flag;
     }
 
@@ -641,44 +556,118 @@ public class DBTest extends Scheduler {
         return rs.next();
     }
 
+
+    // Only code I copied off a Java Tutorial Site. I was unsure on the process on how to copy a text file
+    // https://www.makeuseof.com/java-copy-files-different-ways/
+    public static void copyFile(String strFile) throws IOException {
+        if(!file.exists())
+            file.createNewFile();
+
+        File source = new File(strFile);
+        File destination = new File("COPY.txt");
+        InputStream input = null;
+        OutputStream output = null;
+
+        try {
+            input = new FileInputStream(source);
+            output = new FileOutputStream(destination);
+            byte[] buf = new byte[1024];
+            int bytesRead;
+
+            while ((bytesRead = input.read(buf)) > 0) {
+                output.write(buf, 0, bytesRead);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (input != null) {
+                input.close();
+            }
+
+            if (output != null) {
+                output.close();
+            }
+        }
+    }
+
+    public static void appendToFile(String strFile){
+        arlList.clear();
+        try{
+            BufferedReader bwRead= new BufferedReader(new FileReader(strFile));
+            BufferedWriter bwWrite = new BufferedWriter(new FileWriter(file, true));
+
+            String line;
+            while((line = bwRead.readLine()) != null){
+                bwWrite.write(line + "\n");
+                arlList.add(line);
+            }
+            bwRead.close();
+            bwWrite.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        runScheduler();
+    }
+
+    public static void readFile(String strCLASS_FILE) {
+        try {
+            BufferedReader bf = new BufferedReader(new FileReader(strCLASS_FILE));
+            while (true) {
+                String line = bf.readLine();
+                if (line != null)
+                    arlList.add(line);
+                else
+                    break;
+            }
+            bf.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) throws IOException, SQLException, ClassNotFoundException {
         boolean DBExists = databaseExists();
         String strInput = "";
+        String strHeader = "* * * * * * James Institute of Technology - Degree Scheduling Program * * * * * *";
 
-        System.out.println("\t*** James Institute of Technology - Degree Scheduling Program ***");
+        System.out.println(strHeader);
+        //Check if DB exists and if the schedule table exists
         if (DBExists && tableExists(SCHEDULE_TABLE)) {
+            //On start, if N -> get persisted data from file and do nothing
             if (!initialBoot()) {
                 readFile(COPY_FILE);
             } else {
-                System.out.println("Please enter input file : ");
+                //On start, if Y -> clear table, and get new data. Copy new file
+                System.out.println("Please enter new input file : ");
                 strInput = scanner.next();
+                System.out.println("Adding records to Schedule_Table . . .");
                 readFile(strInput);
                 copyFile(strInput);
             }
+        //DB does not exist or schedule table does not exist
         } else {
-            System.out.println("Please enter input file : ");
+            System.out.print("Please enter input file : ");
             strInput = scanner.next();
             readFile(strInput);
             copyFile(strInput);
         }
 
-
-        //enter input file
         try {
             getConnection();
             buildCourses(tableExists(COURSES_TABLE));
             buildProfessors(tableExists(PROFESSORS_TABLE));
             buildClassrooms(tableExists(CLASSROOM_TABLE));
             buildDatabase(tableExists(SCHEDULE_TABLE));
-
             int choice;
             do {
+                System.out.println("\n" + strHeader);
                 System.out.println("1) Sort schedule by day & time");
                 System.out.println("2) Sort schedule by faculty member & total credit hours");
                 System.out.println("3) Sort schedule by class");
                 System.out.println("4) Load more classes via text file");
                 System.out.println("5) Exit program");
 
+                System.out.print("\nEnter choice: ");
                 choice = scanner.nextInt();
                 switch (choice) {
                     case 1:
@@ -691,14 +680,14 @@ public class DBTest extends Scheduler {
                         scheduleByClassSection();
                         break;
                     case 4:
-                        System.out.println("Please enter additional data file : ");
+                        System.out.print("Please enter additional data file : ");
                         strInput = scanner.next();
                         appendToFile(strInput);
                         runScheduler();
                         updateDatabase();
                         break;
                     case 5:
-                        System.out.println("Would you like to delete the database? (Y/N)");
+                        System.out.print("Would you like to delete the database? (Y/N)");
                         while(true){
                             strInput = scanner.next();
                             if(strInput.equalsIgnoreCase("Y")){
@@ -706,10 +695,10 @@ public class DBTest extends Scheduler {
                                 deleteDatabase();
                                 break;
                             } else if(strInput.equalsIgnoreCase("N")){
-                                System.out.println("Database left intact. Can be viewed later.");
+                                System.out.print("Database left intact. Can be viewed later.");
                                 break;
                             } else {
-                                System.out.println("Please input only Y or N ");
+                                System.out.print("Please input only Y or N ");
                             }
                         }
                         break;
@@ -718,27 +707,11 @@ public class DBTest extends Scheduler {
                         break;
                 }
             } while (choice != 5);
-
-/*            //Bring back the set of user from the database
-            res = displayUsers();
-            //Iterate over the resultSet, print out each record's details
-            while(res.next()){
-                System.out.println("TUID: " + res.getInt("TUID") + "\n" +
-                                   " Course_TUID: " + res.getInt("Course_TUID") + "\n" +
-                                   " Section: " + res.getInt("Section") + "\n" +
-                                   " Classroom_TUID: " + res.getInt("Classroom_TUID") + "\n" +
-                                   " Professor_TUID: " + res.getInt("Professor_TUID") + "\n" +
-                                   " Start Time: " + res.getString("Start_Time") + "\n" +
-                                   " End Time: " + res.getString("End_TIme") + "\n" +
-                                   " Days: " + res.getString("Days"));
-            }
- */
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 }
-
 /*  In order to run:
  *       javac DBTest.java
  *       java -classpath ".;sqlite-jdbc-3.39.3.0.jar" DBTest
