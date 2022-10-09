@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 public class Day {
     protected HashMap<String, String> hm_ClassA;
@@ -38,34 +37,4 @@ public class Day {
     public void setHm_ClassC(HashMap<String, String> hm_ClassC) {
         this.hm_ClassC = new HashMap<>(hm_ClassC);
     }
-
-    public void scheduleClasses(){
-        System.out.println("Class A : ");
-        for (Map.Entry<String, String> s : hm_ClassA.entrySet()
-        ) {
-            if (!s.getValue().equals("Available")) {
-                System.out.println("\t" + s.getKey() + " -> " + s.getValue());
-                arlScheduledClasses.add(s.getValue() + " " + s.getKey() + " A ");
-            }
-        }
-
-        System.out.println("Class B : ");
-        for (Map.Entry<String, String> s : hm_ClassB.entrySet()
-        ) {
-            if (!s.getValue().equals("Available")) {
-                System.out.println("\t" + s.getKey() + " -> " + s.getValue());
-                arlScheduledClasses.add(s.getValue() + " " + s.getKey() + " B ");
-            }
-        }
-
-        System.out.println("Class C : ");
-        for (Map.Entry<String, String> s : hm_ClassC.entrySet()
-        ) {
-            if (!s.getValue().equals("Available")) {
-               System.out.println("\t" + s.getKey() + " -> " + s.getValue());
-                arlScheduledClasses.add(s.getValue() + " " + s.getKey() + " C ");
-            }
-        }
-    }
-
 }

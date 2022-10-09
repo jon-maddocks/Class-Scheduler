@@ -1,4 +1,6 @@
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +13,10 @@ public class DBTest extends Scheduler {
     final static String COPY_FILE = "COPY.txt";
     static Scanner scanner = new Scanner(System.in);
     static ArrayList<String> arlScheduledClasses = new ArrayList<>();
+    static final String SCHEDULE_TABLE = "Schedule_Table";
+    static final String COURSES_TABLE = "Courses_Table";
+    static final String CLASSROOM_TABLE = "Classroom_Table";
+    static final String PROFESSORS_TABLE = "Professors_Table";
     static final int CLASS_ID = 0;
     static final int CLASS_PROFESSOR = 1;
     static final int CLASS_DAYS = 2;
@@ -341,17 +347,22 @@ public class DBTest extends Scheduler {
                 prep.execute();
             }
         }
-
         con.close();
     }
 
 
     public static void deleteDatabase() {
-        String strSQL = "DROP TABLE Schedule_Table";
+        String deleteSchedule = "DROP TABLE Schedule_Table";
+        String deleteProf = "DROP TABLE Professors_Table";
+        String deleteCourses = "DROP TABLE Courses_Table";
+        String deleteClassroom = "DROP TABLE Classroom_Table";
         try {
             Connection conn = getConnection();
             Statement stmt = conn.createStatement();
-            stmt.executeUpdate(strSQL);
+            stmt.executeUpdate(deleteSchedule);
+            stmt.executeUpdate(deleteProf);
+            stmt.executeUpdate(deleteCourses);
+            stmt.executeUpdate(deleteClassroom);
             conn.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -439,42 +450,97 @@ public class DBTest extends Scheduler {
     }
 
     public static void sortDayTime() {
-        String strSQL = "SELECT * FROM Schedule_Table ORDER BY Days, END_TIME DESC";
+        String monSQL = "SELECT * FROM Schedule_Table " +
+                "WHERE Days = 'MW' OR Days = 'M'";
+        String tueSQL = "SELECT * FROM Schedule_Table " +
+                "WHERE Days = 'TR' OR Days = 'T'";
+        String wedSQL = "SELECT * FROM Schedule_Table " +
+                "WHERE Days = 'MW' OR Days = 'W'";
+        String thuSQL = "SELECT * FROM Schedule_Table " +
+                "WHERE Days = 'TR' OR Days = 'R'";
+        String friSQL = "SELECT * FROM Schedule_Table " +
+                "WHERE Days = 'F'";
+   //     Formatter format = new Formatter();
+        String strHeaders = String.format("%15s|%15s|%15s|%15s|%15s|%15s|%15s|%15s|", "TUID", "Course_TUID", "Section", "Classroom_TUID",
+                "Professor_TUID", "Start_Time", "End_Time", "Days");
+
         try {
             Connection conn = getConnection();
-            PreparedStatement prepStatement = conn.prepareStatement(strSQL);
-            ResultSet rs = prepStatement.executeQuery();
+            PreparedStatement prepStatement;
 
-            System.out.println("TUID | Course_TUID | Section | Classroom_TUID | Professor_TUID | Start_TIme | End_Time | Days");
-            while (rs.next()) {
-                System.out.println(rs.getString(1) + " " + rs.getString(2) + " " +
-                        rs.getString(3) + " " + rs.getString(4) + " " +
-                        rs.getString(5) + " " + rs.getString(6) + " " +
-                        rs.getString(7) + " " + rs.getString(8));
+            prepStatement = conn.prepareStatement(monSQL);
+            ResultSet rsMon = prepStatement.executeQuery();
+            System.out.println("\n------------------------------------------------------------ MONDAY " +
+                    "------------------------------------------------------------");
+            System.out.println(strHeaders);
+            while (rsMon.next()) {
+                System.out.printf("%15s|%15s|%15s|%15s|%15s|%15s|%15s|%15s|\n", parseLeadZero(rsMon.getString(1)),
+                        parseLeadZero(rsMon.getString(2)), parseLeadZero(rsMon.getString(3)),
+                        parseLeadZero(rsMon.getString(4)), parseLeadZero(rsMon.getString(5)),
+                        rsMon.getString(6), rsMon.getString(7),
+                        rsMon.getString(8));
             }
-            conn.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-    public static void clearDatabase() {
-        String strSQL = "DELETE FROM Schedule_Table";
-        try {
-            Connection conn = getConnection();
-            Statement stmt = conn.createStatement();
-            stmt.executeUpdate(strSQL);
+
+
+            prepStatement = conn.prepareStatement(tueSQL);
+            ResultSet rsTue = prepStatement.executeQuery();
+            System.out.println("\n------------------------------------------------------------ TUESDAY " +
+                    "-----------------------------------------------------------");
+            System.out.println(strHeaders);
+            while (rsTue.next()) {
+                System.out.printf("%15s|%15s|%15s|%15s|%15s|%15s|%15s|%15s|\n", parseLeadZero(rsTue.getString(1)),
+                        parseLeadZero(rsTue.getString(2)), parseLeadZero(rsTue.getString(3)),
+                        parseLeadZero(rsTue.getString(4)), parseLeadZero(rsTue.getString(5)),
+                        rsTue.getString(6), rsTue.getString(7),
+                        rsTue.getString(8));
+            }
+
+            prepStatement = conn.prepareStatement(wedSQL);
+            ResultSet rsWed = prepStatement.executeQuery();
+            System.out.println("\n------------------------------------------------------------ WEDNESDAY " +
+                    "---------------------------------------------------------");
+            System.out.println(strHeaders);
+            while (rsWed.next()) {
+                System.out.printf("%15s|%15s|%15s|%15s|%15s|%15s|%15s|%15s|\n", parseLeadZero(rsWed.getString(1)),
+                        parseLeadZero(rsWed.getString(2)), parseLeadZero(rsWed.getString(3)),
+                        parseLeadZero(rsWed.getString(4)), parseLeadZero(rsWed.getString(5)),
+                        rsWed.getString(6), rsWed.getString(7),
+                        rsWed.getString(8));
+            }
+
+            prepStatement = conn.prepareStatement(thuSQL);
+            ResultSet rsThu = prepStatement.executeQuery();
+            System.out.println("\n------------------------------------------------------------ THURSDAY " +
+                    "----------------------------------------------------------");
+            System.out.println(strHeaders);
+            while (rsThu.next()) {
+                System.out.printf("%15s|%15s|%15s|%15s|%15s|%15s|%15s|%15s|\n", parseLeadZero(rsThu.getString(1)),
+                        parseLeadZero(rsThu.getString(2)), parseLeadZero(rsThu.getString(3)),
+                        parseLeadZero(rsThu.getString(4)), parseLeadZero(rsThu.getString(5)),
+                        rsThu.getString(6), rsThu.getString(7),
+                        rsThu.getString(8));
+            }
+
+
+            prepStatement = conn.prepareStatement(friSQL);
+            ResultSet rsFri = prepStatement.executeQuery();
+            System.out.println("\n------------------------------------------------------------ FRIDAY " +
+                    "------------------------------------------------------------");
+            System.out.println(strHeaders);
+            while (rsFri.next()) {
+                System.out.printf("%15s|%15s|%15s|%15s|%15s|%15s|%15s|%15s|\n", parseLeadZero(rsFri.getString(1)),
+                        parseLeadZero(rsFri.getString(2)), parseLeadZero(rsFri.getString(3)),
+                        parseLeadZero(rsFri.getString(4)), parseLeadZero(rsFri.getString(5)),
+                        rsFri.getString(6), rsFri.getString(7),
+                        rsFri.getString(8));
+            }
+            System.out.println("\n");
             conn.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    /*
-    SELECT Schedule_Table.Professor_TUID, SUM(Courses_Table.Credit_Hours) AS 'Total'
-                    FROM Schedule_Table
-                    INNER JOIN Courses_Table ON Courses_Table.TUID = Schedule_Table.Course_TUID
-                    GROUP BY Professor_TUID;
-     */
     public static void scheduleByProfessor() {
         String strSQL = "SELECT Professors_Table.Professor_Name, SUM(Courses_Table.Credit_Hours) AS 'Total' " +
                 "FROM Schedule_Table " +
@@ -490,21 +556,11 @@ public class DBTest extends Scheduler {
             PreparedStatement prepStatement = conn.prepareStatement(strSQL);
             ResultSet rs = prepStatement.executeQuery();
 
-            prepStatement = conn.prepareStatement(strSchedule);
-            ResultSet rsSchedule = prepStatement.executeQuery();
-
             while (rs.next()) {
-                System.out.println(rs.getString(1) + " " + rs.getString(2));
-        /*        while(rsSchedule.next()){
-                    System.out.println(rsSchedule.getString(1) + " " + rsSchedule.getString(2) + " " +
-                            rsSchedule.getString(3) + " " + rsSchedule.getString(4) + " " +
-                            rsSchedule.getString(5) + " " + rsSchedule.getString(6) + " " +
-                            rsSchedule.getString(7) + " " + rsSchedule.getString(8));
-                }
-
-         */
+                System.out.printf("Professor: %-10s { Total Credit Hours: %-2s }\n%n",
+                        rs.getString(1), parseLeadZero(rs.getString(2)));
             }
-
+            System.out.println("\n");
             conn.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -512,22 +568,39 @@ public class DBTest extends Scheduler {
     }
 
     public static void scheduleByClassSection() {
-        String strSQL = "SELECT Courses_Table.Course_Title, Schedule_Table.Section, Classroom_Table.Classroom_Name, Classroom_Table.Capacity " +
+        String strSQL = "SELECT Courses_Table.Course_ID, Courses_Table.Course_Title, Schedule_Table.Section, " +
+                "Classroom_Table.Classroom_Name, Classroom_Table.Capacity " +
                 "FROM Courses_Table " +
                 "INNER JOIN Schedule_Table ON Schedule_Table.Course_TUID = Courses_Table.TUID " +
                 "INNER JOIN Classroom_Table ON Classroom_Table.TUID = Schedule_Table.Classroom_TUID " +
                 "ORDER BY Courses_Table.Course_Title;";
+
+        String strHeaders = String.format("%-15s|%-35s|%-10s|%-10s|%-10s|", "Course ID","Course Title", "Section",
+                "Classroom", "Capacity");
+
         try {
             Connection conn = getConnection();
             PreparedStatement prepStatement = conn.prepareStatement(strSQL);
             ResultSet rs = prepStatement.executeQuery();
 
-
+            System.out.println(strHeaders);
             while (rs.next()) {
-                System.out.println(rs.getString(1) + " " + rs.getString(2) + " " +
-                        rs.getString(3) + " " + rs.getString(4));
+                System.out.printf("%-15s|%-35s|%-10s|%-10s|%-10s|\n", rs.getString(1), rs.getString(2),
+                        parseLeadZero(rs.getString(3)),
+                        rs.getString(4), rs.getString(5));
             }
-
+            System.out.println("\n");
+            conn.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public static void clearDatabase() {
+        String strSQL = "DELETE FROM Schedule_Table";
+        try {
+            Connection conn = getConnection();
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate(strSQL);
             conn.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -560,22 +633,20 @@ public class DBTest extends Scheduler {
         return flag;
     }
 
-    public static boolean schedule_tableExists() throws SQLException, ClassNotFoundException {
+    public static boolean tableExists(String table) throws SQLException, ClassNotFoundException {
         Connection conn = getConnection();
         DatabaseMetaData dbm = conn.getMetaData();
-        ResultSet rs = dbm.getTables(null, null, "Schedule_Table", null);
+        ResultSet rs = dbm.getTables(null, null, table, null);
         conn.close();
         return rs.next();
     }
 
     public static void main(String[] args) throws IOException, SQLException, ClassNotFoundException {
-        ResultSet res;
-        Connection con;
         boolean DBExists = databaseExists();
         String strInput = "";
 
         System.out.println("\t*** James Institute of Technology - Degree Scheduling Program ***");
-        if (DBExists && schedule_tableExists()) {
+        if (DBExists && tableExists(SCHEDULE_TABLE)) {
             if (!initialBoot()) {
                 readFile(COPY_FILE);
             } else {
@@ -591,13 +662,14 @@ public class DBTest extends Scheduler {
             copyFile(strInput);
         }
 
+
         //enter input file
         try {
             getConnection();
-            buildCourses(DBExists);
-            buildProfessors(DBExists);
-            buildClassrooms(DBExists);
-            buildDatabase(schedule_tableExists());
+            buildCourses(tableExists(COURSES_TABLE));
+            buildProfessors(tableExists(PROFESSORS_TABLE));
+            buildClassrooms(tableExists(CLASSROOM_TABLE));
+            buildDatabase(tableExists(SCHEDULE_TABLE));
 
             int choice;
             do {
@@ -630,6 +702,7 @@ public class DBTest extends Scheduler {
                         while(true){
                             strInput = scanner.next();
                             if(strInput.equalsIgnoreCase("Y")){
+                                getConnection().close();
                                 deleteDatabase();
                                 break;
                             } else if(strInput.equalsIgnoreCase("N")){
@@ -660,8 +733,6 @@ public class DBTest extends Scheduler {
                                    " Days: " + res.getString("Days"));
             }
  */
-
-
         } catch (Exception e) {
             e.printStackTrace();
         }
