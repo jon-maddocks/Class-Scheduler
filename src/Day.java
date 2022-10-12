@@ -1,3 +1,19 @@
+/**
+ * The purpose of this class is to represent the classrooms for each week day. Each day will consist of three
+ *  hashmaps that represent Classroom A, Classroom B, Classroom C. Each hashmap will contain a key of every
+ *  valid time and a value to represent if that time slot is available or a course is currently in the
+ *  respected classroom.
+ *
+ *  Functions:
+ *      public Day();
+ *      Hashmap getHM_ClassA();
+ *      Hashmap setHM_ClassA();
+ *      Hashmap getHM_ClassB();
+ *      Hashmap setHM_ClassB();
+ *      Hashmap getHM_ClassC();
+ *      Hashmap setHM_ClassC();
+ */
+
 import java.util.ArrayList;
 import java.util.HashMap;
 

@@ -1,3 +1,45 @@
+/**
+ * Project: Assignment 3
+ * Class: CS421
+ * Name: Jon Maddocks
+ *
+ *  This program simulates a school course scheduling algorithm. The scheduling system requires a text file from
+ *      the user in order to provide the scheduling service. The algorithm schedules classes based on FIFO, and
+ *      will require a restricted format of data: Example: CSC 105 James MW 8:30 10:30. The algorithm to schedule
+ *      classes, can be found within Scheduler.java. The purpose of this class is to read the scheduler data and
+ *      input that data into the database file, along with SQLite queries. The user will be initially greeted
+ *      and will either input data for the scheduler algorithm or subsequent data was already found and further
+ *      actions may occur. Afterwards, the scheduling algorithm and database algorithm is complete, and the user
+ *      will be further greeted with a menu options to sort the database with the provided queries. The user
+ *      can also add additional data to schedule more classes. And finally, the user can leave the program and
+ *      will be prompted to either keep or delete the database.
+ *
+ *      Functions:
+ *          Connection getConnection();
+ *          void buildDatabase(boolean);
+ *          void updateDatabase();
+ *          void buildCourses(boolean);
+ *          void buildProfessors(boolean);
+ *          void buildClassrooms(boolean);
+ *          String getClassTUID(String);
+ *          String getProfessorTUID(String);
+ *          String getClassroomTUID(String);
+ *          void sortDayTime();
+ *          void scheduleByProfessor();
+ *          void scheduleByClassSection();
+ *          void clearDatabase();
+ *          void deleteDatabase();
+ *          boolean databaseExists();
+ *          boolean initialBoot();
+ *          boolean tableExists(String);
+ *          void copyFile(String);
+ *          void appendToFile(String);
+ *          void readFile(String);
+ *          String fileExists();
+ *          void main(String[]);
+ *
+ */
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -6,9 +48,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 
-
 public class DBTest extends Scheduler {
 
+    // -- GLOBAL -- //
     final static String DATABASE_FILE = "SQLiteTest1.db";
     final static String COPY_FILE = "COPY.txt";
     static Scanner scanner = new Scanner(System.in);
@@ -17,13 +59,8 @@ public class DBTest extends Scheduler {
     static final String COURSES_TABLE = "Courses_Table";
     static final String CLASSROOM_TABLE = "Classroom_Table";
     static final String PROFESSORS_TABLE = "Professors_Table";
-    static final int CLASS_ID = 0;
-    static final int CLASS_PROFESSOR = 1;
-    static final int CLASS_DAYS = 2;
-    static final int CLASS_START_TIME = 3;
-    static final int CLASS_END_TIME = 4;
 
-
+    //Get connection for database
     private static Connection getConnection() throws ClassNotFoundException, SQLException {
         Connection con;
         //Database path -- if it's new database, it will be created in the project folder
@@ -31,12 +68,12 @@ public class DBTest extends Scheduler {
         return con;
     }
 
+    //Build the initial Schedule Table database
     private static void buildDatabase(boolean DBExists) {
         Connection con = null;
         Statement state = null, state2 = null;
         ResultSet res = null, rs = null;
         PreparedStatement prep = null;
-
 
         String[] arrSplit;
         int class_tuid = 1;
@@ -68,9 +105,11 @@ public class DBTest extends Scheduler {
             prep = con.prepareStatement(tableCount);
             rs = prep.executeQuery();
             int result = Integer.parseInt(rs.getString(1));
+            //If no records are found, insert
             if (result == 0) {
                 for (String s : arlScheduled
                 ) {
+                    //Get data, split into separate entities
                     arrSplit = s.split("\\s+", 7);
                     ArrayList<String> arrList = new ArrayList<>(Arrays.asList(arrSplit));
                     String[] arrSplitTimes = arrList.get(2).split("-", 2);
@@ -115,7 +154,7 @@ public class DBTest extends Scheduler {
             try { if (con != null) con.close(); } catch (Exception e) { e.printStackTrace();}
         }
     }
-
+    //Update the Schedule Table
     public static void updateDatabase() {
         Connection con = null;
         PreparedStatement prep = null;
@@ -170,7 +209,7 @@ public class DBTest extends Scheduler {
             try { if (con != null) con.close(); } catch (Exception e) { e.printStackTrace();}
         }
     }
-
+    //Build the course table
     public static void buildCourses(boolean DBExists) {
         Connection con = null;
         Statement state = null, state2 = null;
@@ -215,9 +254,13 @@ public class DBTest extends Scheduler {
                     String[] arrSplit = arlCatalog.get(i).split(";", 3);
                     courses_tuid++;
                     prep = con.prepareStatement("INSERT INTO Courses_Table VALUES(?,?,?,?);");
+                    //Get TUID
                     prep.setInt(1, courses_tuid);
+                    //Get course TUID
                     prep.setString(2, arrSplit[0]);
+                    //Get course title
                     prep.setString(3, arrSplit[1]);
+                    //Get credit hours
                     prep.setInt(4, Integer.parseInt(arrSplit[2]));
                     prep.execute();
                 }
@@ -232,7 +275,7 @@ public class DBTest extends Scheduler {
             try { if (con != null) con.close(); } catch (Exception e) { e.printStackTrace();}
         }
     }
-
+    //Build professors table
     public static void buildProfessors(boolean DBExists) {
         Connection con = null;
         Statement state = null, state2 = null;
@@ -264,7 +307,9 @@ public class DBTest extends Scheduler {
                 for (int i = 0; i < arlProfessors.size(); i++) {
                     courses_tuid++;
                     prep = con.prepareStatement("INSERT INTO Professors_Table VALUES(?,?);");
+                    //Get TUID
                     prep.setInt(1, courses_tuid);
+                    //Get Prof name
                     prep.setString(2, arlProfessors.get(i));
                     prep.execute();
                 }
@@ -279,7 +324,7 @@ public class DBTest extends Scheduler {
             try { if (con != null) con.close(); } catch (Exception e) { e.printStackTrace();}
         }
     }
-
+    //Build classrooms table
     public static void buildClassrooms(boolean DBExists) {
         Connection con = null;
         Statement state = null, state2 = null;
@@ -310,8 +355,11 @@ public class DBTest extends Scheduler {
                     courses_tuid++;
                     String[] arrSplit = arlClassrooms.get(i).split(";", 2);
                     prep = con.prepareStatement("INSERT INTO Classroom_Table VALUES(?,?,?);");
+                    //Get TUID
                     prep.setInt(1, courses_tuid);
+                    //Get classroom name
                     prep.setString(2, arrSplit[0]);
+                    //Get capacity
                     prep.setInt(3, Integer.parseInt(arrSplit[1]));
                     prep.execute();
                 }
@@ -326,7 +374,7 @@ public class DBTest extends Scheduler {
             try { if (con != null) con.close(); } catch (Exception e) { e.printStackTrace();}
         }
     }
-
+    //Query get all class TUID
     public static String getClassTUID(String strClass) {
         Connection conn = null;
         PreparedStatement prepStatement = null;
@@ -352,7 +400,7 @@ public class DBTest extends Scheduler {
         }
         return strResult;
     }
-
+    //Query get all professors TUID
     public static String getProfessorTUID(String strClass) {
         Connection conn = null;
         PreparedStatement prepStatement = null;
@@ -380,7 +428,7 @@ public class DBTest extends Scheduler {
         }
         return strResult;
     }
-
+    //Query get all classrooms TUID
     public static String getClassroomTUID(String strClass) {
         Connection conn = null;
         PreparedStatement prepStatement = null;
@@ -393,7 +441,6 @@ public class DBTest extends Scheduler {
             prepStatement = conn.prepareStatement(strSQL);
             prepStatement.setString(1, strClass);
             rs = prepStatement.executeQuery();
-
             while (rs.next()) {
                 strResult = rs.getString("TUID");
             }
@@ -407,11 +454,13 @@ public class DBTest extends Scheduler {
         }
         return strResult;
     }
-
+    //Sort the schedule by day/time
     public static void sortDayTime() {
         Connection conn = null;
         PreparedStatement prepStatement = null;
         ResultSet rsMon = null, rsTue = null, rsWed = null, rsThu = null, rsFri = null;
+        //Each SQL will be prepared for their respective day and the result set will contain each
+        //  queried item
         String monSQL = "SELECT Courses_Table.Course_ID, Schedule_Table.Section, Classroom_Table.Classroom_Name,\n" +
                 " Professors_Table.Professor_Name, Schedule_Table.Start_Time, Schedule_Table.End_Time, Schedule_Table.Days\n" +
                 "FROM Schedule_Table\n" +
@@ -533,11 +582,12 @@ public class DBTest extends Scheduler {
             try { if (conn != null) conn.close(); } catch (Exception e) { e.printStackTrace();}
         }
     }
-
+    //Sort the schedule by faculty member with total credit hours
     public static void scheduleByProfessor() {
         Connection conn = null;
         PreparedStatement prepStatement = null, tempStatement = null;
         ResultSet rs = null, tempRS = null;
+        //Query that details how many credit hours each professor had
         String strSQL = "SELECT Professors_Table.Professor_Name, SUM(Courses_Table.Credit_Hours) AS 'Total' " +
                 "FROM Schedule_Table " +
                 "INNER JOIN Courses_Table ON Courses_Table.TUID = Schedule_Table.Course_TUID " +
@@ -557,6 +607,8 @@ public class DBTest extends Scheduler {
                         rs.getString(1), parseLeadZero(rs.getString(2)));
 
                 System.out.print(strHeaders);
+                //After each professor is listed in the report, this query will output the corresponding professor's
+                //  schedule.
                 String strTemp = "SELECT Courses_Table.Course_ID, Schedule_Table.Section, Courses_Table.Credit_Hours, " +
                         "Classroom_Table.Classroom_Name, Schedule_Table.Start_Time, Schedule_Table.End_Time, Schedule_Table.Days\n" +
                         "FROM Schedule_Table\n" +
@@ -588,11 +640,12 @@ public class DBTest extends Scheduler {
             try { if (conn != null) conn.close(); } catch (Exception e) { e.printStackTrace();}
         }
     }
-
+    //Sort schedule by listing all class sections
     public static void scheduleByClassSection() {
         Connection conn = null;
         PreparedStatement prepStatement = null, tempStatement = null;
         ResultSet rs = null, tempRS = null;
+        //Query that will return the total capacity each course has taken up individually
         String strSQL = "SELECT Courses_Table.Course_ID, Courses_Table.Course_Title, sum(Classroom_Table.Capacity) AS 'Total Capacity'\n" +
                 "FROM Courses_Table \n" +
                 "INNER JOIN Schedule_Table ON Schedule_Table.Course_TUID = Courses_Table.TUID\n" +
@@ -613,6 +666,8 @@ public class DBTest extends Scheduler {
                         rs.getString(3));
 
                 System.out.println(strHeaders);
+                //This query will correspond as well, after each course lists it's total capacity, another list will
+                //  output containing every section's class
                 String strTemp = "SELECT Schedule_Table.Section, Classroom_Table.Classroom_Name," +
                         " Classroom_Table.Capacity, Professors_Table.Professor_Name, Schedule_Table.Start_Time," +
                         " Schedule_Table.End_Time, Schedule_Table.Days\n" +
@@ -645,6 +700,7 @@ public class DBTest extends Scheduler {
             try { if (conn != null) conn.close(); } catch (Exception e) { e.printStackTrace();}
         }
     }
+    //Clear the schedule table, but keep it's existence
     public static void clearDatabase() {
         Connection conn = null;
         Statement stmt = null;
@@ -660,7 +716,7 @@ public class DBTest extends Scheduler {
             try { if (conn != null) conn.close(); } catch (Exception e) { e.printStackTrace();}
         }
     }
-
+    //Delete every table found within the database
     public static void deleteDatabase() {
         Connection conn = null;
         Statement stmt = null;
@@ -687,13 +743,13 @@ public class DBTest extends Scheduler {
             try { if (conn != null) conn.close(); } catch (Exception e) { e.printStackTrace();}
         }
     }
-
+    //Check if the database file exists on run
     public static boolean databaseExists() {
         File file = new File(DATABASE_FILE);
         return file.exists();
     }
 
-    //if FALSE, read COPY.txt else, read INPUT.txt
+    //On startup, previous data was found on the database and this function will run
     public static boolean initialBoot() {
         System.out.print("Initial data was found on the Database. " +
                 "Would you like to clear all scheduled records? (Y/N): ");
@@ -701,20 +757,21 @@ public class DBTest extends Scheduler {
         boolean flag = true;
         do {
             strInput = scanner.next();
-            if(strInput.equalsIgnoreCase("Y")){
+            if (strInput.equalsIgnoreCase("Y")) {
                 clearDatabase();
                 break;
-            } else if(strInput.equalsIgnoreCase("N")){
+            } else if (strInput.equalsIgnoreCase("N")) {
                 flag = false;
                 break;
             } else {
                 System.out.print("Invalid choice selection. Please select Y/N only : ");
             }
-        } while(!strInput.equalsIgnoreCase("Y") || !strInput.equalsIgnoreCase("N"));
+        } while (!strInput.equalsIgnoreCase("Y") || !strInput.equalsIgnoreCase("N"));
 
         return flag;
     }
 
+    //Check if a certain table is found within the database
     public static boolean tableExists(String table) throws SQLException, ClassNotFoundException {
         Connection conn = getConnection();
         DatabaseMetaData dbm = conn.getMetaData();
@@ -749,17 +806,15 @@ public class DBTest extends Scheduler {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            if (input != null) {
-                input.close();
-            }
-
-            if (output != null) {
-                output.close();
-            }
+            try { if (input != null) input.close(); } catch (Exception e) { e.printStackTrace();}
+            try { if (output != null) output.close(); } catch (Exception e) { e.printStackTrace();}
         }
     }
 
     public static void appendToFile(String strFile){
+        //The file that was copied will need data to append to it when loading additional data.
+        //  Clear the list of classes (so they do not get scheduled again) and append the
+        //  new data to the file and add the new data into the ArrayList
         arlList.clear();
         BufferedReader bwRead= null;
         BufferedWriter bwWrite = null;
@@ -781,7 +836,7 @@ public class DBTest extends Scheduler {
         }
         runScheduler();
     }
-
+    //Read the file and add its contents to the Arraylist
     public static void readFile(String strCLASS_FILE) {
         BufferedReader bf = null;
         try {
@@ -800,6 +855,7 @@ public class DBTest extends Scheduler {
         }
     }
 
+    //Check if a certain file exists
     public static String fileExists(){
         String strInput = scanner.next();
         File file = new File(strInput);
@@ -817,7 +873,6 @@ public class DBTest extends Scheduler {
         boolean DBExists = databaseExists();
         String strInput = "";
         String strHeader = "* * * * * * James Institute of Technology - Degree Scheduling Program * * * * * *";
-
         boolean DELETE = false;
 
         System.out.println(strHeader);
@@ -835,7 +890,7 @@ public class DBTest extends Scheduler {
                 readFile(strInput);
                 copyFile(strInput);
             }
-        //DB does not exist or schedule table does not exist
+        //DB exists, but no data was found on the schedule table. Get new data
         } else if(DBExists && !tableExists(SCHEDULE_TABLE)){
             System.out.println("\n------ Database file found. But no scheduling data exists. ------ ");
             System.out.print("Please enter input data file : ");
@@ -843,6 +898,7 @@ public class DBTest extends Scheduler {
             readFile(strInput);
             copyFile(strInput);
         } else {
+            //DB does not exist and must be created here
             System.out.println("\n------ Database file was not found and will be created here ------ ");
             System.out.print("Please enter input data file : ");
             strInput = fileExists();
@@ -851,10 +907,12 @@ public class DBTest extends Scheduler {
         }
 
         try {
+            //Build the entire database if the table does not exist
             buildCourses(tableExists(COURSES_TABLE));
             buildProfessors(tableExists(PROFESSORS_TABLE));
             buildClassrooms(tableExists(CLASSROOM_TABLE));
             buildDatabase(tableExists(SCHEDULE_TABLE));
+            //-- Menu for user --
             String choice;
             do {
                 System.out.println("\n" + strHeader);
@@ -879,7 +937,8 @@ public class DBTest extends Scheduler {
                     case "4":
                         System.out.print("Please enter additional data file : ");
                         strInput = scanner.next();
-                            do {
+                        //Loop until a valid file is found
+                        do {
                                 File file = new File(strInput);
                                 if (file.exists()) {
                                     appendToFile(strInput);
@@ -893,6 +952,7 @@ public class DBTest extends Scheduler {
                             }while(!file.exists());
                         break;
                     case "5":
+                        //Loop until proper key is pressed. Delete the database and remove the file
                         System.out.print("Would you like to delete the database? (Y/N): ");
                         while(!strInput.equalsIgnoreCase("Y") || !strInput.equalsIgnoreCase("N")){
                             strInput = scanner.next();
@@ -917,6 +977,9 @@ public class DBTest extends Scheduler {
             e.printStackTrace();
         }
 
+        //When deleting the database, a third-party process may interfere when trying to delete the database. That's
+        //  why on the off-chance this does occur, the deleteDatabase() function removes all tables and leaves the
+        //  database in a blank state just in case
         if(DELETE){
             try{
                 Files.deleteIfExists(Path.of("SQLiteTest1.db"));
@@ -929,5 +992,4 @@ public class DBTest extends Scheduler {
 /*  In order to run:
  *       javac DBTest.java
  *       java -classpath ".;sqlite-jdbc-3.39.3.0.jar" DBTest
- *
  * */

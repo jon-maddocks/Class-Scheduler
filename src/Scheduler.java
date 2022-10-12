@@ -1,3 +1,31 @@
+/**
+ * This class is the meat and bones of the scheduling algorithm. A text file will be provided by the user, and this
+ *  program will go line-by-line and input the file into an ArrayList. The list will be iterated through one-by-one,
+ *  and determine whether or not the class can be scheduled. Once the scheduling is complete, the scheduler will
+ *  send an Arraylist of the classes that can be scheduled to the DBTest.java class. In which the database portion
+ *  will be compiled.
+ *
+ *  Functions:
+ *      	public Scheduler();
+ * 	        void runScheduler();
+ * 	        void algorithmMW(ArrayList, String, String, int, ArrayList, String);
+ * 	        void algorithmTR(ArrayList, String, String, int, ArrayList, String);
+ * 	        void algorithm_day(ArrayList, ArrayList, String, String, String, String);
+ * 	        void algorithm_Friday(ArrayList, String, String, String, String);
+ * 	        String trimCourseID(String);
+ * 	        String parseMilitaryTime(String[], int);
+ * 	        String convertTime(String);
+ * 	        String parseLeadZero(String);
+ * 	        boolean class_Scheduler(Hashmap, String, String);
+ * 	        boolean conflictTimes(Hashmap);
+ * 	        boolean requestMW(Day, Day, String, String, String);
+ * 	        boolean requestTR(Day, Day, String, String, String);
+ * 	        boolean request_day(Hashmap, Hashmap, Hashmap, String, String);
+ * 	        boolean requestF(Day, String, String, String);
+ * 	        ArrayList getClasses();
+ * 	        ArrayList getUnavailableClasses();
+ */
+
 import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -6,45 +34,51 @@ import java.util.*;
 
 public class Scheduler {
     static ArrayList<String> arlList = new ArrayList<>();
+    //Arraylist for each credit
     static ArrayList<String> arlCredit4 = new ArrayList<>();
     static ArrayList<String> arlCredit3 = new ArrayList<>();
     static ArrayList<String> arlCredit2 = new ArrayList<>();
     static ArrayList<String> arlCredit1 = new ArrayList<>();
-
+    //ArrayList for Friday
     static ArrayList<String> arlCredit4_Friday = new ArrayList<>();
     static ArrayList<String> arlCredit3_Friday = new ArrayList<>();
-
+    //Hashmaps for each classroom
     static HashMap<String, String> hm_ClassA;
     static HashMap<String, String> hm_ClassB;
     static HashMap<String, String> hm_ClassC;
+    //Day objects for their respective day
+    static Day clsMonday = new Day();
+    static Day clsTuesday = new Day();
+    static Day clsWednesday = new Day();
+    static Day clsThursday = new Day();
+    static Day clsFriday = new Day();
+    //Arraylists for either two day or one day courses
+    static ArrayList<String> arlTwoDay = new ArrayList<>();
+    static ArrayList<String> arlSingleDay = new ArrayList<>();
+    static ArrayList<Day> clsDays = new ArrayList<>();
+    //ArrayLists that will contain classes that will be scheduled and classes that could not
+    static ArrayList<String> arlScheduledClasses = new ArrayList<>();
+    static ArrayList<String> arlCannotSchedule;
+    //Arraylist that will have each class with their section number
+    static ArrayList<String> arlSectionClasses = new ArrayList<>();
+    //String that will append class information throughout the program
+    static String SCHEDULE_CLASS = "";
+
+    static File file = new File("COPY.txt");
+    static HashMap<String, Integer> hmSectionNum = new HashMap<>();
+
+    //Global constants that will correspond to their respective index when splitting data
     final static int CLASS_ID = 0;
     final static int CLASS_PROFESSOR = 1;
     final static int CLASS_DAYS = 2;
     final static int CLASS_START_TIME = 3;
     final static int CLASS_END_TIME = 4;
 
-    static Day clsMonday = new Day();
-    static Day clsTuesday = new Day();
-    static Day clsWednesday = new Day();
-    static Day clsThursday = new Day();
-    static Day clsFriday = new Day();
-
-    static ArrayList<String> arlTwoDay = new ArrayList<>();
-    static ArrayList<String> arlSingleDay = new ArrayList<>();
-    static ArrayList<Day> clsDays = new ArrayList<>();
-
-    static ArrayList<String> arlScheduledClasses = new ArrayList<>();
-    static ArrayList<String> arlCannotSchedule;
-    static ArrayList<String> arlSectionClasses = new ArrayList<>();
-
-    static String SCHEDULE_CLASS = "";
-
-    static File file = new File("COPY.txt");
-    static HashMap<String, Integer> hmSectionNum = new HashMap<>();
-
     public Scheduler() {
         arlCannotSchedule = new ArrayList<>();
+        //Hashmap that will contain every valid time possible
         HashMap<String, String> hm_Times = new HashMap<>();
+        //Add each possible time into their respective ArrayList
         arlCredit4.add("08:30-10:30");
         arlCredit4.add("10:30-12:30");
         arlCredit4.add("12:30-02:30");
@@ -82,11 +116,11 @@ public class Scheduler {
         arlCredit3_Friday.add("12:00-03:00");
         arlCredit3_Friday.add("01:00-04:00");
 
+        //Add each valid time into the Hashmap, and provide it's availability
         for (String s : arlCredit4) hm_Times.put(s, "Available");
         for (String s : arlCredit3) hm_Times.put(s, "Available");
         for (String s : arlCredit2) hm_Times.put(s, "Available");
         for (String s : arlCredit1) hm_Times.put(s, "Available");
-
         for (String s : arlCredit4_Friday) hm_Times.put(s, "Available");
         for (String s : arlCredit3_Friday) hm_Times.put(s, "Available");
 
@@ -121,18 +155,20 @@ public class Scheduler {
         clsFriday.setHm_ClassA(hm_ClassA);
         clsFriday.setHm_ClassB(hm_ClassB);
         clsFriday.setHm_ClassC(hm_ClassC);
-
+    //    DAYS
         clsDays.add(clsMonday);
         clsDays.add(clsTuesday);
         clsDays.add(clsWednesday);
         clsDays.add(clsThursday);
-
         clsDays.add(clsFriday);
     }
 
     public static void runScheduler(){
         try {
             for(int i = 0; i < arlList.size(); i++){
+                // The arlList will contain every line from the file, and each will be individually handled here.
+                //  It will get split apart and inserted into the scheduling algorithm below, depending on the
+                //  request day and request time.
                 int sectionNum = 0;
                 String tempTrim = trimCourseID(arlList.get(i));
                 String[] arrClassSplit = tempTrim.split("\\s+", 5);
@@ -175,10 +211,10 @@ public class Scheduler {
         }
     }
 
+    //Scheduling Algorithm for when the request days are MW
     public static void algorithmMW(ArrayList<String> arlCredit,
                                    String requestTime, String requestClassTitle, int ORIGINAL_INDEX,
                                    ArrayList<String> arlFriday, String requestProf) throws ParseException {
-
             int index = arlCredit.indexOf(requestTime);
             String ORIGINAL_REQUEST_TIME = requestTime;
             boolean trueFlag = false;
@@ -189,15 +225,15 @@ public class Scheduler {
             while(!trueFlag){
  //               System.out.println("\n---------Requesting: " + requestClassTitle + " on " + requestDays + " at " +
  //                       requestTime + "---------");
-                //Step 2, 3
+                //Check initial days MW
                 requiredStep[currentStep] = requestMW(clsMonday, clsWednesday, requestTime, requestClassTitle, requestProf);
-                //Step 4, 5
+                //Check same time, sequential days TR
                 if(!requiredStep[currentStep]){
      //               System.out.println(" * * * * Requesting for TR * * * *");
                     currentStep++;
                     requiredStep[currentStep] = requestTR(clsTuesday, clsThursday, requestTime, requestClassTitle, requestProf);
                 }
-                //Steps 6 -> 9
+                //Check all sequential times MW
                 if(!requiredStep[currentStep]){
                     boolean flag = false;
        //             System.out.println(" * * * * Requesting for MW * * * *");
@@ -213,7 +249,7 @@ public class Scheduler {
                         }
                     }
                 }
-                //Steps 10 -> 15
+                //Check from earliest time on sequential days TR
                 if(!requiredStep[currentStep]){
                     boolean flag = false;
                     index = 0;
@@ -232,7 +268,7 @@ public class Scheduler {
                         }
                     }
                 }
-                //Steps 16, 17
+                //Loop back to Monday and check from earliest times
                 if(!requiredStep[currentStep]){
                     index = 0;
                     boolean flag = false;
@@ -250,28 +286,30 @@ public class Scheduler {
                         }
                     }
                 }
-
+                //If nothing conflicted, schedule the class
                 if(requiredStep[currentStep]){
                     arlScheduledClasses.add(SCHEDULE_CLASS);
                     trueFlag = true;
                 }
+                //Something conflicted, class could not be scheduled. Exit loop and set flag for Friday
                 else if(!requiredStep[currentStep] && index == ORIGINAL_INDEX){
                     fridayFlag = true;
                     trueFlag =true;
                 }
             }
+            //Try to schedule on Friday
             if(fridayFlag){
                 algorithm_Friday(arlFriday, requestClassTitle, requestProf, "MW", ORIGINAL_REQUEST_TIME);
             }
     }
 
+    //Scheduling Algorithm for when the request days are TR
     public static void algorithmTR(ArrayList<String> arlCredit,
                                    String requestTime, String requestClassTitle, int ORIGINAL_INDEX,
                                    ArrayList<String> arlFriday, String requestProf) throws ParseException {
 
         int index = arlCredit.indexOf(requestTime);
         String ORIGINAL_REQUEST_TIME = requestTime;
-
         boolean trueFlag = false;
         boolean[] requiredStep = new boolean[50];
         int currentStep = 0;
@@ -280,16 +318,16 @@ public class Scheduler {
         while(!trueFlag){
     //        System.out.println("\n---------Requesting: " + requestClassTitle + " on " + requestDays + " at " +
      //               requestTime + "---------");
-            //Step 2, 3
+            //Check initial time and day for TR
       //      System.out.println(" * * * * Requesting for TR * * * *");
             requiredStep[currentStep] = requestTR(clsTuesday, clsThursday, requestTime, requestClassTitle, requestProf);
-            //Step 4, 5
+            //Check initial time on sequential days MW
             if(!requiredStep[currentStep]){
     //            System.out.println(" * * * * Requesting for MW * * * *");
                 currentStep++;
                 requiredStep[currentStep] = requestMW(clsMonday, clsWednesday, requestTime, requestClassTitle, requestProf);
             }
-            //Steps 6 -> 9
+            //Check all sequential times on TR
             if(!requiredStep[currentStep]){
                 boolean flag = false;
       //          System.out.println(" * * * * Requesting for TR * * * *");
@@ -305,7 +343,7 @@ public class Scheduler {
                     }
                 }
             }
-            //Steps 10 -> 15
+            //Check all earliest times on sequential days MW
             if(!requiredStep[currentStep]){
                 boolean flag = false;
                 index = 0;
@@ -324,7 +362,7 @@ public class Scheduler {
                     }
                 }
             }
-            //Steps 16, 17
+            //Loop back to TR and check all earlier times
             if(!requiredStep[currentStep]){
                 index = 0;
                 boolean flag = false;
@@ -342,23 +380,23 @@ public class Scheduler {
                     }
                 }
             }
-
-
+            //Nothing conflicted, add to schedule
             if(requiredStep[currentStep]){
                 arlScheduledClasses.add(SCHEDULE_CLASS);
                 trueFlag = true;
             }
-
+            //Conflict occurred, set flag for Friday and exit loop
             else if(!requiredStep[currentStep] && index == ORIGINAL_INDEX){
                 fridayFlag = true;
                 trueFlag =true;
             }
         }
+        //Try to schedule class for Friday
         if(fridayFlag){
             algorithm_Friday(arlFriday, requestClassTitle, requestProf, "TR", ORIGINAL_REQUEST_TIME);
         }
     }
-
+    //Scheduling Algorithm for when the request days are M,T,W,R
     public static void algorithm_day(ArrayList<String> arlCredit, ArrayList<Day> clsDays,
                                    String requestTime, String requestDays,
                                    String requestClassTitle, String requestProf) throws ParseException {
@@ -366,26 +404,23 @@ public class Scheduler {
         int index = arlCredit.indexOf(requestTime);
         int dayIndex = arlSingleDay.indexOf(requestDays);
         String ORIGINAL_REQUEST_TIME = requestTime;
-
         int OG_INDEX = index;
         int OG_DAY_INDEX = dayIndex;
-
         boolean trueFlag = false;
         boolean[] requiredStep = new boolean[50];
         int currentStep = 0;
         boolean fridayFlag = false;
-        boolean checkBack = false;
         String currentDay = "";
 
         while(!trueFlag){
     //        System.out.println("\n---------Requesting: " + requestClassTitle + " on " + arlSingleDay.get(dayIndex) + " at " +
     //                requestTime + "---------");
-            //Step 2, 3
+            //Check initial day and time
     //        System.out.println(" * * * * Requesting for " + arlSingleDay.get(dayIndex) + " * * * *");
             requiredStep[currentStep] = request_day(clsDays.get(dayIndex).hm_ClassA, clsDays.get(dayIndex).hm_ClassB,
                     clsDays.get(dayIndex).hm_ClassC, requestTime, requestClassTitle);
             currentDay = arlSingleDay.get(dayIndex);
-            //4,5
+            //Check all sequential times on initial day
             if(!requiredStep[currentStep]){
                 boolean flag = false;
       //          System.out.println(" * * * * Requesting for " + arlSingleDay.get(dayIndex) + " * * * *");
@@ -405,7 +440,7 @@ public class Scheduler {
                 }
             }
 
-            //Steps 6 -> 11
+            //Check earliest times for the next day forward
             if(!requiredStep[currentStep]){
                 boolean flag = false;
                 index = 0;
@@ -415,7 +450,6 @@ public class Scheduler {
        //         System.out.println(" * * * * Requesting for " + arlSingleDay.get(dayIndex) + " * * * *");
                 while(!flag){
                     if(requiredStep[currentStep] || index == arlCredit.size() || dayIndex != arlSingleDay.size()){
-                        //Check next day
                         index = 0;
                         flag = true;
                     } else {
@@ -431,16 +465,14 @@ public class Scheduler {
                 }
             }
 
-            //Steps 12,13
+            //Check earliest times for the initial day
             if(!requiredStep[currentStep] && dayIndex == arlSingleDay.indexOf(requestDays)){
                 currentDay = arlSingleDay.get(OG_DAY_INDEX);
                 requestTime = arlCredit.get(index);
                 dayIndex = OG_DAY_INDEX;
-
                 boolean flag = false;
                 while(!flag){
                     if(requiredStep[currentStep] || index == OG_INDEX){
-                        //Check next day
                         index = 0;
                         flag = true;
                     } else {
@@ -454,18 +486,19 @@ public class Scheduler {
                     }
                 }
             }
-
+            //No conflicts occurred, schedule the class
             if(requiredStep[currentStep]){
                 SCHEDULE_CLASS += " " + currentDay + " "  + requestProf;
                 arlScheduledClasses.add(SCHEDULE_CLASS);
                 trueFlag = true;
             }
-
+            //Conflicts occurred, class could not be scheduled. Set Friday flag
             else if(!requiredStep[currentStep] && dayIndex == arlSingleDay.indexOf(requestDays)){
                 fridayFlag = true;
                 trueFlag = true;
             }
         }
+        //Try to schedule class on Friday
         if(fridayFlag){
             algorithm_Friday(arlCredit, requestClassTitle, requestProf, requestDays, ORIGINAL_REQUEST_TIME);
         }
@@ -477,17 +510,17 @@ public class Scheduler {
         int index = 0;
         String requestTime = arlCredit.get(index);
         boolean trueFlag = false;
-        boolean[] requiredStep = new boolean[40];
+        boolean[] requiredStep = new boolean[50];
         int currentStep = 0;
         boolean unavailableFlag = false;
 
         while(!trueFlag){
    //         System.out.println("\n---------Requesting: " + requestClassTitle + " on Friday at " +
    //                 requestTime + "---------");
-            //Step 2, 3
+            //Check initial time on Friday
             requiredStep[currentStep] = requestF(clsFriday, requestTime, requestClassTitle, requestProf);
 
-            //Steps 4,5
+            //Check sequential times on Friday
             if(!requiredStep[currentStep]){
                 boolean flag = false;
                 index++;
@@ -504,6 +537,7 @@ public class Scheduler {
                     }
                 }
             }
+            //No conflicts occurred, schedule class on Friday
             if(requiredStep[currentStep]){
                 arlScheduledClasses.add(SCHEDULE_CLASS);
                 trueFlag = true;
@@ -512,12 +546,14 @@ public class Scheduler {
                 trueFlag =true;
             }
         }
+        //Conflicts occurred, the class was unable to be scheduled
         if(unavailableFlag){
             String strTemp = String.format("%-10s %-7s %-3s %s", requestClassTitle, requestProf, requestDay, originalRequestTime);
             arlCannotSchedule.add(strTemp);
         }
     }
 
+    //Trim the space in-between CSC ID
     public static String trimCourseID(String strLine) {
         StringBuilder strTrim = new StringBuilder();
 
@@ -528,6 +564,7 @@ public class Scheduler {
         return strTrim.toString();
     }
 
+    //Convert universal time into military time
     public static String parseMilitaryTime(String[] arrTime, int index) throws ParseException {
         SimpleDateFormat displayFormat = new SimpleDateFormat("HH:mm");
         SimpleDateFormat parseFormat = new SimpleDateFormat("hh:mm a");
@@ -545,12 +582,12 @@ public class Scheduler {
         return arrTime[index];
     }
 
+    //Convert military time to universal time
     public static String convertTime(String strMilitaryTime){
         int intHours = (int)strMilitaryTime.charAt(0) - '0';
         int intMinutes = (int)strMilitaryTime.charAt(1)- '0';
         int intConvert = intHours * 10 + intMinutes;
         StringBuilder strUTime = new StringBuilder();
-
 
         intConvert %= 12;
         if (intConvert == 0) {
@@ -567,7 +604,7 @@ public class Scheduler {
         }
         return strUTime.toString();
     }
-
+    //Add leading zero if the length is only 1
     public static String parseLeadZero(String strTime) {
         String[] arrSplit = strTime.split(":");
         String strResult = strTime;
@@ -577,6 +614,7 @@ public class Scheduler {
         return strResult;
     }
 
+    //Purpose is to find EVERY conflict of class times between the start and end time of the requested class
     public static boolean class_Scheduler(HashMap<String, String > hm_Class, String requestTime, String requestClassTitle) throws ParseException {
         HashMap<String, String> hm_ConflictTimes = new HashMap<>();
         final int TIME_START = 0;
@@ -598,29 +636,26 @@ public class Scheduler {
             requestStartTime = LocalTime.parse(parseMilitaryTime(arrRequest, TIME_START));
             requestEndTime = LocalTime.parse(parseMilitaryTime(arrRequest, TIME_END));
 
-            //                                  10:00       12:00
-            //checking if 10:30 is in-between startTime and endTime
+            //Finding all conflict times; ex: 8:30 & 10:30 insert every conflicting time into Hashmap
             if ((requestStartTime.isAfter(startTime) && requestStartTime.isBefore(endTime)) ||
                     (requestEndTime.isAfter(startTime) && requestEndTime.isBefore(endTime)) ||
                     (startTime.isAfter(requestStartTime) && startTime.isBefore(requestEndTime)) ||
                     (endTime.isAfter(requestStartTime) && endTime.isBefore(requestEndTime))
             ) {
-                //The request time is in-between all the times within this block
-                //if ALL is available return true, else, return false
                 hm_ConflictTimes.put(startTime + "-" + endTime, s.getValue());
             }
         }
+        //Check all conflicting times and see if they are all available
         if (conflictTimes(hm_ConflictTimes)) {
-    //        System.out.println(requestClassTitle + " inserted into " + requestTime);
             hm_Class.put(requestTime, requestClassTitle);
             SCHEDULE_CLASS = requestClassTitle + " " + requestStartTime+"-"+requestEndTime;
             return true;
-        } else {
-      //      System.out.println(requestClassTitle + " CANNOT be inserted at " + requestTime);
+        } else
             return false;
-        }
     }
 
+    //If any of the values in the Hashmap equate to anything other than 'Available', a class has already been
+    //  been scheduled in this time slot
     public static boolean conflictTimes(HashMap<String, String> hm_ConflictTimes) {
         for (Map.Entry<String, String> s : hm_ConflictTimes.entrySet()
         ) {
@@ -631,6 +666,7 @@ public class Scheduler {
         return true;
     }
 
+    //Check classrooms A,B,C for MW and check if any are available
     public static boolean requestMW(Day clsMon, Day clsWed, String requestTime, String requestClassTitle, String requestProf) throws ParseException {
     //    System.out.println(" For Class A");
         boolean class_A =  class_Scheduler(clsMon.hm_ClassA, requestTime, requestClassTitle) &&
@@ -657,6 +693,7 @@ public class Scheduler {
         return class_A || class_B || class_C;
     }
 
+    //Check classrooms A,B,C for TR and check if any are available
     public static boolean requestTR(Day clsTues, Day clsThurs, String requestTime, String requestClassTitle, String requestProf) throws ParseException {
    //     System.out.println(" For Class A");
         boolean class_A = class_Scheduler(clsTues.hm_ClassA, requestTime, requestClassTitle) &&
@@ -683,6 +720,7 @@ public class Scheduler {
         return class_A || class_B || class_C;
     }
 
+    //Check classrooms A,B,C for M,T,W,R and check if any are available
     public static boolean request_day(HashMap<String, String> classA, HashMap<String, String> classB,
                                       HashMap<String, String> classC,
                                       String requestTime, String requestClassTitle) throws ParseException {
@@ -705,10 +743,10 @@ public class Scheduler {
                 SCHEDULE_CLASS += " C ";
             }
         }
-
         return class_A || class_B || class_C;
     }
 
+    //Check classrooms A,B,C for F and check if any are available
     public static boolean requestF(Day clsFriday, String requestTime, String requestClassTitle, String requestProf) throws ParseException {
    //     System.out.println(" For Class A");
         boolean class_A = class_Scheduler(clsFriday.hm_ClassA, requestTime, requestClassTitle);
@@ -732,10 +770,11 @@ public class Scheduler {
         return class_A || class_B || class_C;
     }
 
+    //Return all classes that can be scheduled
     public static ArrayList<String> getClasses(){
         return arlScheduledClasses;
     }
-
+    //Return all classes that could not scheduled
     public static ArrayList<String> getUnavailableClasses(){
         return  arlCannotSchedule;
     }
