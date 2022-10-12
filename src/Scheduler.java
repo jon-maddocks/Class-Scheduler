@@ -34,7 +34,7 @@ public class Scheduler {
     static ArrayList<Day> clsDays = new ArrayList<>();
 
     static ArrayList<String> arlScheduledClasses = new ArrayList<>();
-    static ArrayList<String> arlCannotSchedule = new ArrayList<>();
+    static ArrayList<String> arlCannotSchedule;
     static ArrayList<String> arlSectionClasses = new ArrayList<>();
 
     static String SCHEDULE_CLASS = "";
@@ -43,6 +43,7 @@ public class Scheduler {
     static HashMap<String, Integer> hmSectionNum = new HashMap<>();
 
     public Scheduler() {
+        arlCannotSchedule = new ArrayList<>();
         HashMap<String, String> hm_Times = new HashMap<>();
         arlCredit4.add("08:30-10:30");
         arlCredit4.add("10:30-12:30");
@@ -179,7 +180,7 @@ public class Scheduler {
                                    ArrayList<String> arlFriday, String requestProf) throws ParseException {
 
             int index = arlCredit.indexOf(requestTime);
-
+            String ORIGINAL_REQUEST_TIME = requestTime;
             boolean trueFlag = false;
             boolean[] requiredStep = new boolean[50];
             int currentStep = 0;
@@ -260,7 +261,7 @@ public class Scheduler {
                 }
             }
             if(fridayFlag){
-                algorithm_Friday(arlFriday, requestClassTitle, requestProf);
+                algorithm_Friday(arlFriday, requestClassTitle, requestProf, "MW", ORIGINAL_REQUEST_TIME);
             }
     }
 
@@ -269,6 +270,7 @@ public class Scheduler {
                                    ArrayList<String> arlFriday, String requestProf) throws ParseException {
 
         int index = arlCredit.indexOf(requestTime);
+        String ORIGINAL_REQUEST_TIME = requestTime;
 
         boolean trueFlag = false;
         boolean[] requiredStep = new boolean[50];
@@ -353,7 +355,7 @@ public class Scheduler {
             }
         }
         if(fridayFlag){
-            algorithm_Friday(arlFriday, requestClassTitle, requestProf);
+            algorithm_Friday(arlFriday, requestClassTitle, requestProf, "TR", ORIGINAL_REQUEST_TIME);
         }
     }
 
@@ -363,6 +365,7 @@ public class Scheduler {
 
         int index = arlCredit.indexOf(requestTime);
         int dayIndex = arlSingleDay.indexOf(requestDays);
+        String ORIGINAL_REQUEST_TIME = requestTime;
 
         int OG_INDEX = index;
         int OG_DAY_INDEX = dayIndex;
@@ -464,12 +467,12 @@ public class Scheduler {
             }
         }
         if(fridayFlag){
-            algorithm_Friday(arlCredit, requestClassTitle, requestProf);
+            algorithm_Friday(arlCredit, requestClassTitle, requestProf, requestDays, ORIGINAL_REQUEST_TIME);
         }
     }
 
     public static void algorithm_Friday(ArrayList<String> arlCredit, String requestClassTitle,
-                                        String requestProf) throws ParseException {
+                                        String requestProf, String requestDay, String originalRequestTime) throws ParseException {
 
         int index = 0;
         String requestTime = arlCredit.get(index);
@@ -510,9 +513,8 @@ public class Scheduler {
             }
         }
         if(unavailableFlag){
-    //        System.out.println("------> CANNOT BE SCHEDULED : " + requestClassTitle
-   //                + " at " + requestTime + " <--------");
-            arlCannotSchedule.add(requestClassTitle + " -> " + requestTime);
+            String strTemp = String.format("%-10s %-7s %-3s %s", requestClassTitle, requestProf, requestDay, originalRequestTime);
+            arlCannotSchedule.add(strTemp);
         }
     }
 
@@ -543,6 +545,29 @@ public class Scheduler {
         return arrTime[index];
     }
 
+    public static String convertTime(String strMilitaryTime){
+        int intHours = (int)strMilitaryTime.charAt(0) - '0';
+        int intMinutes = (int)strMilitaryTime.charAt(1)- '0';
+        int intConvert = intHours * 10 + intMinutes;
+        StringBuilder strUTime = new StringBuilder();
+
+
+        intConvert %= 12;
+        if (intConvert == 0) {
+            strUTime.append("12");
+            for (int i = 2; i < 5; ++i) {
+                strUTime.append(strMilitaryTime.charAt(i));
+            }
+        }
+        else {
+            strUTime.append(intConvert);
+            for (int i = 2; i < 5; ++i) {
+                strUTime.append(strMilitaryTime.charAt(i));
+            }
+        }
+        return strUTime.toString();
+    }
+
     public static String parseLeadZero(String strTime) {
         String[] arrSplit = strTime.split(":");
         String strResult = strTime;
@@ -561,6 +586,8 @@ public class Scheduler {
             return false;
 
 
+        LocalTime requestStartTime = null;
+        LocalTime requestEndTime = null;
         for (Map.Entry<String, String> s : hm_Class.entrySet()
         ) {
             String[] arrsplit = s.getKey().split("-");
@@ -568,8 +595,8 @@ public class Scheduler {
 
             LocalTime startTime = LocalTime.parse(parseMilitaryTime(arrsplit, TIME_START));
             LocalTime endTime = LocalTime.parse(parseMilitaryTime(arrsplit, TIME_END));
-            LocalTime requestStartTime = LocalTime.parse(parseMilitaryTime(arrRequest, TIME_START));
-            LocalTime requestEndTime = LocalTime.parse(parseMilitaryTime(arrRequest, TIME_END));
+            requestStartTime = LocalTime.parse(parseMilitaryTime(arrRequest, TIME_START));
+            requestEndTime = LocalTime.parse(parseMilitaryTime(arrRequest, TIME_END));
 
             //                                  10:00       12:00
             //checking if 10:30 is in-between startTime and endTime
@@ -586,7 +613,7 @@ public class Scheduler {
         if (conflictTimes(hm_ConflictTimes)) {
     //        System.out.println(requestClassTitle + " inserted into " + requestTime);
             hm_Class.put(requestTime, requestClassTitle);
-            SCHEDULE_CLASS = requestClassTitle + " " + requestTime;
+            SCHEDULE_CLASS = requestClassTitle + " " + requestStartTime+"-"+requestEndTime;
             return true;
         } else {
       //      System.out.println(requestClassTitle + " CANNOT be inserted at " + requestTime);
@@ -703,18 +730,6 @@ public class Scheduler {
         }
         SCHEDULE_CLASS += " F " + requestProf;
         return class_A || class_B || class_C;
-    }
-
-    public static void printOutput(){
-        System.out.println("Classes scheduled: ");
-        for (String s: arlScheduledClasses
-             ) {
-            System.out.println(s);
-        }
-        System.out.println("\nClasses NOT scheduled: ");
-        for (String s: arlCannotSchedule){
-            System.out.println(s);
-        }
     }
 
     public static ArrayList<String> getClasses(){
